@@ -43,7 +43,7 @@ function go(v,pid){if(v==='pipeline'&&pid){SP=pid;V='pipeline';}else{V=v;SP=null
 function sb(s){const m={draft:['Draft','d'],started:['Started','i'],analyzing:['Analyzing','i'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],jd_revision_needed:['Revision','e'],screening_complete:['Screened','i'],ranking_complete:['Ranked','w'],shortlist_ready:['Shortlist','w'],completed:['Complete','ok']};const[l,c]=m[s]||[s||'Unknown','d'];return`<span class="b b-${c}">${l}</span>`;}
 function rn(){document.getElementById('nav').innerHTML=NAV.map(n=>`<div class="ni ${V===n.id?'on':''}" onclick="go('${n.id}')"><span style="font-size:16px;width:20px;text-align:center">${n.i}</span>${n.l}</div>`).join('');}
 async function lp(){P=await api('/pipelines');if(!Array.isArray(P))P=[];rn();}
-async function rc(){const m=document.getElementById('main');if(V==='dashboard')await rd(m);else if(V==='new')rnp(m);else if(V==='pipeline'&&SP)await rpd(m);else if(V==='candidates')await rca(m);else m.innerHTML=`<div class="empty"><b>${V==='interviews'?'▶':'☰'}</b><h3>${V==='interviews'?'Interviews':'Audit'}</h3><p>Select a pipeline from dashboard</p></div>`;}
+async function rc(){const m=document.getElementById('main');if(V==='dashboard')await rd(m);else if(V==='new')rnp(m);else if(V==='pipeline'&&SP)await rpd(m);else if(V==='candidates')await rca(m);else if(V==='interviews')await rint(m);else m.innerHTML=`<div class="empty"><b>☰</b><h3>Audit Log</h3><p>Select a pipeline from dashboard</p></div>`;}
 async function rd(m){await lp();if(!P.length){m.innerHTML=`<div class="empty"><b>◈</b><h3>No pipelines yet</h3><p>Create your first hiring pipeline</p><button class="btn btn-p btn-lg mt" onclick="go('new')">✦ Create Pipeline</button></div>`;return;}
 m.innerHTML=`<div class="flex jcb aic mb"><h2>Active Pipelines</h2><button class="btn btn-g" onclick="rc()">↻ Refresh</button></div><div class="g ga">${P.map(p=>`<div class="c" style="cursor:pointer" onclick="go('pipeline','${p.id}')"><div class="flex jcb aic mb"><div style="font-size:16px;font-weight:600">${p.role_title||'Untitled'}</div>${sb(p.status)}</div><div style="font-size:12px;color:var(--tm)" class="mono">${(p.id||'').slice(0,12)}...</div></div>`).join('')}</div>`;}
 function rnp(m){m.innerHTML=`<h2>Start New Pipeline</h2><p class="sub">Agent 1 will analyze your knowledgebase, map skills, and generate a JD.</p><div class="c glow" style="max-width:560px"><div class="mb"><label>Role Title</label><input id="r" placeholder="e.g. Frontend Developer"></div><div class="mb"><label>Experience Level</label><input id="e" placeholder="e.g. 2 years"></div><div class="mb"><label>Department</label><input id="d" value="Engineering"></div><div class="mb"><label>Candidate Type</label><div class="flex gap" id="ct"><button class="btn btn-p" data-v="auto">Auto-detect</button><button class="btn btn-g" data-v="fresher">Fresher</button><button class="btn btn-g" data-v="experienced">Experienced</button></div></div><button class="btn btn-p btn-lg w" id="go" onclick="cp()">✦ Start Pipeline</button><div id="res" class="mt"></div></div>`;let t='auto';document.getElementById('ct').onclick=e=>{if(!e.target.dataset.v)return;t=e.target.dataset.v;document.querySelectorAll('#ct .btn').forEach(b=>b.className=b.dataset.v===t?'btn btn-p':'btn btn-g');};window._t=()=>t;}
@@ -53,6 +53,74 @@ async function acp(dec){const fb=document.getElementById('fb')?.value;if(dec==='
 async function ul(f){if(!f.length)return;const fd=new FormData();for(const x of f)fd.append('files',x);await fetch(`${A}/pipelines/${SP}/upload`,{method:'POST',body:fd});rc();}
 async function rcl(tc){const r=await api(`/pipelines/${SP}/candidates`);if(!r?.candidates?.length){tc.innerHTML=`<div class="empty"><b>◎</b><h3>No candidates</h3><p>Upload resumes in Overview tab</p></div>`;return;}tc.innerHTML=r.candidates.map(c=>{const col=c.screening_verdict?.includes('Shortlisted')?'ok':c.screening_verdict?.includes('Flagged')?'w':'e';return`<div class="c" style="padding:16px"><div class="flex jcb aic"><div><div style="font-size:14px;font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--td)">${c.candidate_type||''} · ${c.email||''}</div></div><div class="flex aic gap">${c.screening_score!=null?`<div style="font-size:20px;font-weight:700;font-family:var(--fm);color:${c.screening_score>=60?'var(--ok)':c.screening_score>=45?'var(--warn)':'var(--err)'}">${c.screening_score}</div>`:''}${c.screening_verdict?`<span class="b b-${col}">${c.screening_verdict}</span>`:''}</div></div>${c.decision_note?`<div style="font-size:12px;color:var(--tm);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5">${c.decision_note}</div>`:''}</div>`;}).join('');}
 async function rca(m){await lp();if(!P.length){m.innerHTML=`<div class="empty"><b>◎</b><h3>No pipelines</h3></div>`;return;}m.innerHTML=`<h2 class="mb">All Candidates</h2>`;for(const p of P){const r=await api(`/pipelines/${p.id}/candidates`);if(r?.candidates?.length){m.innerHTML+=`<div style="font-size:15px;font-weight:600;color:var(--al);margin:16px 0 8px;cursor:pointer" onclick="go('pipeline','${p.id}')">${p.role_title} →</div>`;m.innerHTML+=r.candidates.map(c=>`<div class="c" style="padding:12px"><div class="flex jcb aic"><span>${c.name}</span><span class="b b-${c.screening_verdict?.includes('Shortlisted')?'ok':'d'}">${c.screening_verdict||'pending'}</span></div></div>`).join('');}}}
+
+async function rint(m){
+  // Fetch interview results and scheduled interviews
+  let results=[],scheduled=[];
+  try{results=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
+  try{scheduled=(await(await fetch('/api/v1/scheduled-interviews')).json()).interviews||[];}catch(e){}
+
+  let html='<h2 class="mb">Interviews & Scheduling</h2>';
+
+  // Shortlisted from AI interview — ready to schedule
+  if(results.length){
+    html+='<div style="font-size:15px;font-weight:600;color:var(--al);margin-bottom:12px">AI Interview Results</div>';
+    results.forEach(function(r){
+      const col=r.interview_score>=70?'ok':r.interview_score>=55?'w':'e';
+      const isScheduled=scheduled.some(function(s){return s.candidate_name===r.candidate_name});
+      html+=`<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">${r.candidate_name}</div><div style="font-size:11px;color:var(--td)">Session: ${(r.session_id||'').slice(0,12)}...</div></div><div class="flex aic gap"><span style="font-size:20px;font-weight:700;font-family:var(--fm);color:var(--${col})">${r.interview_score}</span><span class="b b-${col}">${r.verdict}</span></div></div>${isScheduled?'<div style="font-size:12px;color:var(--ok);margin-bottom:8px">✓ Final interview scheduled</div>':''}${r.interview_score>=50&&!isScheduled?`<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px"><div style="font-size:13px;font-weight:600;margin-bottom:10px">Schedule Final Interview</div><div class="flex gap mb"><div style="flex:1"><label>Date</label><input type="date" id="dt_${r.session_id}" value="2026-04-20"></div><div style="flex:1"><label>Time</label><input type="time" id="tm_${r.session_id}" value="15:00"></div><div style="flex:1"><label>Duration (min)</label><input type="number" id="dur_${r.session_id}" value="60"></div></div><div id="interviewers_${r.session_id}"><div class="flex gap mb"><div style="flex:2"><label>Interviewer Name</label><input id="in_${r.session_id}_0" placeholder="e.g. Vaibhav"></div><div style="flex:2"><label>Email</label><input id="ie_${r.session_id}_0" placeholder="e.g. vaibhav@ruh.ai"></div><div style="flex:1"><label>Role</label><input id="ir_${r.session_id}_0" placeholder="CTO"></div></div></div><div class="flex gap"><button class="btn btn-g" onclick="addInterviewer('${r.session_id}')">+ Add Interviewer</button><button class="btn btn-p" onclick="scheduleInterview('${r.session_id}','${r.candidate_name}','')">Schedule & Send Invites</button></div></div>`:''}</div>`;
+    });
+  }
+
+  // Scheduled interviews — pending final decision
+  if(scheduled.length){
+    html+='<div style="font-size:15px;font-weight:600;color:var(--warn);margin:24px 0 12px">Scheduled Final Interviews</div>';
+    scheduled.forEach(function(s){
+      html+=`<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">${s.candidate_name}</div><div style="font-size:12px;color:var(--tm)">${s.date} at ${s.time} · ${s.interviewers?.map(function(i){return i.name}).join(', ')}</div></div><span class="b b-w">${s.status}</span></div><div style="font-size:12px;color:var(--tm);margin-bottom:8px">Meet: <a href="${s.meet_link}" target="_blank" style="color:var(--al)">${s.meet_link||'Link pending'}</a></div><div class="flex gap"><button class="btn btn-ok" onclick="finalDecision('${s.candidate_name}','${s.candidate_email}','selected')">✓ Selected — Send Offer</button><button class="btn btn-e" onclick="finalDecision('${s.candidate_name}','${s.candidate_email}','rejected')">✕ Not Selected</button></div></div>`;
+    });
+  }
+
+  if(!results.length&&!scheduled.length){
+    html+='<div class="empty"><b>▶</b><h3>No interviews yet</h3><p>Complete the AI screening round first</p></div>';
+  }
+  m.innerHTML=html;
+}
+
+var _ic={};
+function addInterviewer(sid){
+  _ic[sid]=(_ic[sid]||0)+1;var n=_ic[sid];
+  var div=document.getElementById('interviewers_'+sid);
+  div.insertAdjacentHTML('beforeend','<div class="flex gap mb"><div style="flex:2"><input id="in_'+sid+'_'+n+'" placeholder="Name"></div><div style="flex:2"><input id="ie_'+sid+'_'+n+'" placeholder="Email"></div><div style="flex:1"><input id="ir_'+sid+'_'+n+'" placeholder="Role"></div></div>');
+}
+
+async function scheduleInterview(sid,name,email){
+  var dt=document.getElementById('dt_'+sid)?.value;
+  var tm=document.getElementById('tm_'+sid)?.value;
+  var dur=document.getElementById('dur_'+sid)?.value||60;
+  var interviewers=[];
+  for(var i=0;i<=(_ic[sid]||0);i++){
+    var n=document.getElementById('in_'+sid+'_'+i)?.value;
+    var e=document.getElementById('ie_'+sid+'_'+i)?.value;
+    var r=document.getElementById('ir_'+sid+'_'+i)?.value;
+    if(n&&e)interviewers.push({name:n,email:e,role:r||''});
+  }
+  if(!interviewers.length){alert('Add at least one interviewer');return;}
+  var body={session_id:sid,candidate_name:name,candidate_email:email,interview_date:dt,interview_time:tm,duration_minutes:parseInt(dur),interviewers:interviewers};
+  var res=await(await fetch('/api/v1/schedule-interview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  if(res.status==='scheduled'){alert('Interview scheduled! Invites sent to '+res.invites_sent+' people.\nMeet link: '+(res.meet_link||'pending'));rint(document.getElementById('main'));}
+  else alert('Error: '+JSON.stringify(res));
+}
+
+async function finalDecision(name,email,decision){
+  var msg=decision==='selected'?'Send OFFER to '+name+'?':'Send REJECTION to '+name+'?';
+  if(!confirm(msg))return;
+  var salary='',start='';
+  if(decision==='selected'){salary=prompt('Salary offer (e.g. 15 LPA):','');start=prompt('Start date (e.g. May 1, 2026):','');}
+  var res=await(await fetch('/api/v1/final-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:name,decision:decision,salary:salary||'',start_date:start||''})})).json();
+  alert(decision==='selected'?'Offer sent!':'Rejection sent.');
+  rint(document.getElementById('main'));
+}
+
 lp().then(()=>rc());
 </script>
 </body>
