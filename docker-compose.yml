@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:pass@db:5432/harness
+      DATABASE_URL_SYNC: postgresql://user:pass@db:5432/harness
+      ANTHROPIC_AUTH_TOKEN: ${ANTHROPIC_AUTH_TOKEN}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/credentials.json
+      CLAWVATAR_URL: ws://clawvatar:8765
+      KNOWLEDGEBASE_PATH: /app/knowledgebase
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro
+      - ./knowledgebase:/app/knowledgebase:ro
+      - ./avatars:/app/avatars:ro
+    depends_on: [db, clawvatar]
+
+  clawvatar:
+    build: ./clawvatar-engine
+    ports: ["8765:8765"]
+    volumes:
+      - ./avatars:/app/avatars:ro
+    command: clawvatar serve --host 0.0.0.0 --port 8765
+    environment:
+      PIPER_MODEL_DIR: /tmp/piper-models
+
+  db:
+    image: postgres:16-alpine
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: harness
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+
+volumes:
+  pgdata:
