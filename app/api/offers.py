@@ -26,9 +26,8 @@ class ScheduleRequest(BaseModel):
     candidate_name: str
     candidate_email: str
     interview_date: str  # "2026-04-20"
-    interview_time: str  # "3:00 PM IST"
+    interview_time: str  # "15:00" (24h) or "3:00 PM"
     duration_minutes: int = 60
-    meet_link: str  # "https://meet.google.com/xyz-abc-def"
     interviewers: list[dict]  # [{"name": "Vaibhav", "email": "vaibhav@ruh.ai", "role": "CTO"}]
     notes: str = ""
 
@@ -54,6 +53,29 @@ async def schedule_final_interview(data: ScheduleRequest):
     ai_score = ai_result.get("interview_score", "N/A")
     ai_verdict = ai_result.get("verdict", "N/A")
 
+    # Auto-create Google Calendar event with Meet link
+    meet_link = ""
+    try:
+        from app.integrations.calendar import create_interview_event
+        cal_result = create_interview_event(
+            candidate_name=data.candidate_name,
+            candidate_email=data.candidate_email,
+            interviewers=data.interviewers,
+            date=data.interview_date,
+            time=data.interview_time,
+            duration_minutes=data.duration_minutes,
+            description=f"AI Screening Score: {ai_score}/100 — {ai_verdict}",
+        )
+        meet_link = cal_result.get("meet_link", "")
+        if meet_link:
+            logger.info(f"Google Meet auto-created: {meet_link}")
+        else:
+            logger.warning(f"Could not create Meet link: {cal_result.get('error', 'unknown')}")
+            meet_link = "Google Meet link will be shared separately"
+    except Exception as e:
+        logger.warning(f"Calendar integration failed: {e}")
+        meet_link = "Google Meet link will be shared separately"
+
     # 1. Send invite to candidate
     candidate_body = f"""
     <div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
@@ -65,7 +87,7 @@ async def schedule_final_interview(data: ScheduleRequest):
             <p style="margin:4px 0"><strong>Date:</strong> {data.interview_date}</p>
             <p style="margin:4px 0"><strong>Time:</strong> {data.interview_time}</p>
             <p style="margin:4px 0"><strong>Duration:</strong> {data.duration_minutes} minutes</p>
-            <p style="margin:4px 0"><strong>Meeting Link:</strong> <a href="{data.meet_link}">{data.meet_link}</a></p>
+            <p style="margin:4px 0"><strong>Meeting Link:</strong> <a href="{meet_link}">{meet_link}</a></p>
             <p style="margin:4px 0"><strong>Interviewers:</strong> {', '.join(i['name'] + ' (' + i.get('role','') + ')' for i in data.interviewers)}</p>
         </div>
 
@@ -104,7 +126,7 @@ async def schedule_final_interview(data: ScheduleRequest):
                 <p style="margin:4px 0"><strong>Candidate:</strong> {data.candidate_name}</p>
                 <p style="margin:4px 0"><strong>Date:</strong> {data.interview_date} at {data.interview_time}</p>
                 <p style="margin:4px 0"><strong>Duration:</strong> {data.duration_minutes} min</p>
-                <p style="margin:4px 0"><strong>Meeting:</strong> <a href="{data.meet_link}">{data.meet_link}</a></p>
+                <p style="margin:4px 0"><strong>Meeting:</strong> <a href="{meet_link}">{meet_link}</a></p>
                 <p style="margin:4px 0"><strong>AI Screening Score:</strong> {ai_score}/100 — {ai_verdict}</p>
             </div>
 
@@ -129,7 +151,7 @@ async def schedule_final_interview(data: ScheduleRequest):
         "candidate_email": data.candidate_email,
         "date": data.interview_date,
         "time": data.interview_time,
-        "meet_link": data.meet_link,
+        "meet_link": meet_link,
         "interviewers": data.interviewers,
         "status": "scheduled",
     }
@@ -138,7 +160,7 @@ async def schedule_final_interview(data: ScheduleRequest):
         "status": "scheduled",
         "candidate": data.candidate_name,
         "date": f"{data.interview_date} {data.interview_time}",
-        "meet_link": data.meet_link,
+        "meet_link": meet_link,
         "invites_sent": len(data.interviewers) + 1,
     }
 
