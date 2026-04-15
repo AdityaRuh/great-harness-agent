@@ -11,6 +11,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.pipelines import router as pipelines_router
 from app.api.candidates import router as candidates_router
 from app.api.interviews import router as interviews_router
+from app.api.interview_eval import router as eval_router
+from app.api.offers import router as offers_router
 from app.api.audit import router as audit_router
 from app.api.careers import router as careers_router
 from app.utils.errors import error_handler_middleware
@@ -54,6 +56,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 app.include_router(pipelines_router, prefix="/api/v1")
 app.include_router(candidates_router, prefix="/api/v1")
 app.include_router(interviews_router, prefix="/api/v1")
+app.include_router(eval_router)
+app.include_router(offers_router)
 app.include_router(audit_router, prefix="/api/v1")
 app.include_router(careers_router)
 
