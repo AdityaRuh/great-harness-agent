@@ -157,33 +157,38 @@ textarea{resize:vertical}
 
 <script>
 var A='/api/v1',V='overview',SP=null,P=[],CT='auto';
+function tFetch(url,ms){ms=ms||3000;return Promise.race([fetch(url).then(function(r){return r.json()}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'))},ms)})]);}
 function openModal(){document.getElementById('modalBg').classList.add('show');document.getElementById('inp_r').focus();}
 function closeModal(){document.getElementById('modalBg').classList.remove('show');}
 document.getElementById('ctBtns').onclick=function(e){if(!e.target.dataset.v)return;CT=e.target.dataset.v;document.querySelectorAll('#ctBtns .btn').forEach(function(b){b.className=b.dataset.v===CT?'btn btn-p':'btn';b.style.fontSize='11px';b.style.padding='5px 12px';});};
 
 async function api(p,o){o=o||{};try{var r=await fetch(A+p,{headers:{'Content-Type':'application/json'},method:o.method||'GET',body:o.body});return await r.json();}catch(e){return{error:e.message};}}
 function go(v,pid){V=v;SP=pid||null;render();}
-function sb(s){var m={draft:['Draft','a1'],started:['Started','a1'],analyzing:['Analyzing','a1'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],screening_complete:['Screened','a2'],ranking_complete:['Ranked','a2'],ranking_approved:['Ranking Approved','a2'],shortlist_ready:['Shortlist','w'],invites_sent:['Invites Sent','a3'],questions_generated:['Questions Ready','a3'],completed:['Complete','ok']};var x=m[s]||[s||'—','a1'];return '<span class="bdg b-'+x[1]+'">'+x[0]+'</span>';}
+function sb(s){var m={draft:['Draft','a1'],started:['Started','a1'],analyzing:['Analyzing','a1'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],screening_complete:['Screened','a2'],ranking_complete:['Ranked','a2'],ranking_approved:['Ranking Approved','a2'],ranking_approved:['Ranking Approved','a2'],shortlist_ready:['Shortlist','w'],invites_sent:['Invites Sent','a3'],questions_generated:['Questions Ready','a3'],completed:['Complete','ok']};var x=m[s]||[s||'—','a1'];return '<span class="bdg b-'+x[1]+'">'+x[0]+'</span>';}
 async function lp(){P=await api('/pipelines');if(!Array.isArray(P))P=[];}
 
 function renderNav(){
   var tabs='',right='';
-  if(V==='pipeline'&&SP){
-    tabs='<div class="tab'+(V==='pipeline'?' on':'')+'" data-t="pipeline">Timeline</div><div class="tab" data-t="candidates">Candidates</div><div class="tab" data-t="interviews">Interviews</div><div class="tab" data-t="audit">Audit</div>';
+  if(V==='pipeline'||V==='candidates'||V==='audit'){
+    tabs='<div class="tab'+(V==='pipeline'?' on':'')+'" data-t="pipeline">Timeline</div><div class="tab'+(V==='candidates'?' on':'')+'" data-t="candidates">Candidates</div><div class="tab'+(V==='interviews'?' on':'')+'" data-t="interviews">Interviews</div><div class="tab'+(V==='audit'?' on':'')+'" data-t="audit">Audit</div>';
     right='<button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
   } else {
-    tabs='<div class="tab on" data-t="overview">Overview</div><div class="tab" data-t="allcandidates">Candidates</div><div class="tab" data-t="interviews">Interviews</div>';
+    tabs='<div class="tab'+(V==='overview'?' on':'')+'" data-t="overview">Overview</div><div class="tab'+(V==='allcandidates'?' on':'')+'" data-t="allcandidates">Candidates</div><div class="tab'+(V==='interviews'?' on':'')+'" data-t="interviews">Interviews</div>';
     right='<button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
   }
   document.getElementById('mainTabs').innerHTML=tabs;
   document.getElementById('topRight').innerHTML=right;
-  document.getElementById('mainTabs').onclick=function(e){if(!e.target.dataset.t)return;document.querySelectorAll('#mainTabs .tab').forEach(function(t){t.classList.remove('on')});e.target.classList.add('on');var t=e.target.dataset.t;if(t==='overview')go('overview');else if(t==='pipeline')go('pipeline',SP);else if(t==='candidates')renderCandidatesTab();else if(t==='allcandidates')renderAllCandidates();else if(t==='interviews')renderInterviews();else if(t==='audit')renderAudit();};
+  document.getElementById('mainTabs').onclick=function(e){if(!e.target.dataset.t)return;go(e.target.dataset.t,SP);};
 }
 
 async function render(){
   renderNav();var m=document.getElementById('main');
   if(V==='overview')await renderOverview(m);
   else if(V==='pipeline'&&SP)await renderPipeline(m);
+  else if(V==='allcandidates')await renderAllCandidates();
+  else if(V==='candidates')await renderCandidatesTab();
+  else if(V==='interviews')await renderInterviews();
+  else if(V==='audit')await renderAudit();
 }
 
 async function renderOverview(m){
@@ -202,9 +207,13 @@ async function renderOverview(m){
 async function renderPipeline(m){
   var d=await api('/pipelines/'+SP);if(d?.error){m.innerHTML='<div style="color:var(--err);padding:40px">'+d.error+'</div>';return;}
   var hp=!!d.current_checkpoint;var s=d.status||'';
-  var a1ok=['jd_pending_approval','jd_approved','ranking_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
+  var a1ok=['jd_pending_approval','jd_approved','ranking_approved','ranking_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a2ok=['ranking_complete','ranking_approved','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
+  var ivResults=[],schd=[],a4ok=false;
+  try{ivResults=(await tFetch('/api/v1/interview/results',3000)).results||[];}catch(e){}
+  try{schd=(await tFetch('/api/v1/scheduled-interviews',3000)).interviews||[];}catch(e){}
+  a4ok=schd.length>0;if(a4ok||ivResults.length)a3ok=true;
   // Check actual interview/scheduling state
   var ivResults=[];try{ivResults=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
   var schd=[];try{schd=(await(await fetch('/api/v1/scheduled-interviews')).json()).interviews||[];}catch(e){}
@@ -241,7 +250,7 @@ async function renderPipeline(m){
 
   // Agent 3 — Coral
   h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a3ok?' live':'')+'" style="background:var(--a3bg);color:var(--a3t)">A3</div><div class="tl-line" style="background:'+(a3ok?'var(--a3)':'var(--border)')+'"></div></div>';
-  h+='<div class="tl-card'+(a2ok?'':' fut')+''+(a3ok?' active':'')+'" style="background:'+(a3ok?'var(--bg2)':'var(--bg2)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews'+(a4ok?' completed':a3ok?' in progress':'')+'</h4>'+(a3ok?'<span class="bdg b-a3">Active now</span>':'<span class="bdg" style="color:var(--t3);border-color:var(--border)">Pending</span>')+'</div>';
+  h+='<div class="tl-card'+(a2ok?'':' fut')+''+(a3ok?' active':'')+'" style="background:'+(a3ok?'var(--bg2)':'var(--bg2)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews'+(a4ok?' completed':a3ok?' in progress':'')+'</h4>'+(a4ok?'<span class="bdg b-a3">Completed</span>':a3ok?'<span class="bdg b-a3">Active now</span>':'<span class="bdg" style="color:var(--t3);border-color:var(--border)">Pending</span>')+'</div>';
   // Show candidate rows if interviews are active
   if(a3ok){
     var results=[];try{results=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
@@ -273,35 +282,82 @@ async function createPipeline(){
 }
 
 async function renderCandidatesTab(){
-  var m=document.getElementById('main');var r=await api('/pipelines/'+SP+'/candidates');
-  if(!r?.candidates?.length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">◎</div><h3>No candidates yet</h3><p>Upload resumes or candidates apply via careers page</p></div></div>';return;}
+  var m=document.getElementById('main');
+  m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading candidates...</div></div>';
+  var r=await api('/pipelines/'+SP+'/candidates');
+  if(!r?.candidates?.length){m.innerHTML='<div class="page"><div style="text-align:center;padding:80px 20px"><div style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:var(--a2bg);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="#1D9E75" stroke-width="1.5"/><path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"/></svg></div><h3 style="font-size:18px;font-weight:600;color:var(--t1);margin-bottom:6px">No candidates yet</h3><p style="font-size:14px;color:var(--t3);max-width:360px;margin:0 auto 20px;line-height:1.6">Upload resumes or share the careers page to receive applications.</p></div></div>';return;}
   var decisions={};try{decisions=await api('/pipelines/'+SP+'/candidates/decisions');}catch(e){}
-  var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">Candidates</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">'+r.candidates.length+' applicants · Review and approve for interviews</p>';
-  r.candidates.forEach(function(c,i){
-    var col=c.screening_score>=60?'ok':c.screening_score>=45?'warn':'err';
-    var scoreCol=c.screening_score>=60?'var(--ok)':c.screening_score>=45?'var(--warn)':'var(--err)';
-    var hr=decisions[c.email]||decisions[c.name]||{};
+  var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">Candidates</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">'+r.candidates.length+' applicants</p>';
+  r.candidates.forEach(function(c2,i){
+    var col=c2.screening_score>=60?'ok':c2.screening_score>=45?'warn':'err';
+    var scoreCol=c2.screening_score>=60?'var(--ok)':c2.screening_score>=45?'var(--warn)':'var(--err)';
+    var hr=decisions[c2.email]||decisions[c2.name]||{};
     var isAp=hr.decision==='approve';var isRe=hr.decision==='reject';
-    h+='<div class="fi" id="cd_'+i+'" style="background:var(--bg2);border:1px solid '+(isAp?'var(--oks)':isRe?'var(--errs)':'var(--border)')+';border-radius:var(--r);padding:20px;margin-bottom:12px;'+(isRe?'opacity:.4;':'')+'transition:all .2s">';
-    h+='<div class="flex aic gap" style="margin-bottom:12px"><div style="width:42px;height:42px;border-radius:12px;background:var(--'+col+'bg);color:'+scoreCol+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border:1px solid var(--'+col+'s);flex-shrink:0">'+(c.name||'?').slice(0,2).toUpperCase()+'</div>';
-    h+='<div style="flex:1"><div style="font-size:15px;font-weight:500">'+c.name+(c.escalated?' <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:var(--warnbg);color:var(--warn);border:1px solid var(--warns);font-weight:600;vertical-align:middle">ESCALATED</span>':'')+'</div>';
-    h+='<div style="font-size:12px;color:var(--t3);margin-top:2px">'+(c.candidate_type||'experienced')+' · '+(c.email||'')+'</div></div>';
-    h+='<div style="text-align:center;min-width:60px"><div style="font-size:28px;font-weight:700;font-family:var(--mono);color:'+scoreCol+';letter-spacing:-2px">'+(c.screening_score!=null?c.screening_score:'—')+'</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Score</div></div>';
-    h+='<span class="bdg b-'+col+'" style="margin-left:8px">'+(c.screening_verdict||'pending')+'</span></div>';
-    if(c.decision_note){h+='<div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;padding:12px 14px;background:var(--bg3);border-radius:var(--rs)">'+c.decision_note.slice(0,300)+'</div>';}
-    if(c.red_flags&&c.red_flags.length){h+='<div style="font-size:11px;color:var(--err);margin-bottom:12px;padding:10px 14px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs);line-height:1.5"><strong>Red flags:</strong> '+c.red_flags.join(' · ')+'</div>';}
+    h+='<div class="fi" id="cd_'+i+'" style="background:var(--bg2);border:1px solid '+(isAp?'var(--oks)':isRe?'var(--errs)':'var(--border)')+';border-radius:var(--r);padding:20px;margin-bottom:12px;'+(isRe?'opacity:.4;':'')+'">';
+    h+='<div class="flex aic gap" style="margin-bottom:12px"><div style="width:42px;height:42px;border-radius:12px;background:var(--'+col+'bg);color:'+scoreCol+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border:1px solid var(--'+col+'s);flex-shrink:0">'+(c2.name||'?').slice(0,2).toUpperCase()+'</div>';
+    h+='<div style="flex:1"><div style="font-size:15px;font-weight:500">'+c2.name+(c2.escalated?' <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:var(--warnbg);color:var(--warn);border:1px solid var(--warns);font-weight:600">ESCALATED</span>':'')+'</div>';
+    h+='<div style="font-size:12px;color:var(--t3);margin-top:2px">'+(c2.candidate_type||'')+' · '+(c2.email||'')+'</div></div>';
+    h+='<div style="text-align:center;min-width:60px"><div style="font-size:28px;font-weight:700;font-family:var(--mono);color:'+scoreCol+';letter-spacing:-2px">'+(c2.screening_score!=null?c2.screening_score:'—')+'</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase">Score</div></div>';
+    h+='<span class="bdg b-'+col+'" style="margin-left:8px">'+(c2.screening_verdict||'pending')+'</span></div>';
+    if(c2.decision_note){h+='<div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;padding:12px 14px;background:var(--bg3);border-radius:var(--rs)">'+c2.decision_note.slice(0,300)+'</div>';}
+    if(c2.red_flags&&c2.red_flags.length){h+='<div style="font-size:11px;color:var(--err);margin-bottom:12px;padding:10px 14px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs);line-height:1.5"><strong>Red flags:</strong> '+c2.red_flags.join(' · ')+'</div>';}
     if(isAp){h+='<div style="font-size:12px;color:var(--ok);font-weight:500;padding:10px 14px;background:var(--okbg);border-radius:var(--rs);border:1px solid var(--oks)">✓ Approved by HR for interviews</div>';}
-    else if(isRe){h+='<div style="font-size:12px;color:var(--err);font-weight:500;padding:10px 14px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs)">✕ Rejected by HR — rejection email sent</div>';}
-    else{h+='<div class="flex gap"><button class="btn btn-ok" style="padding:8px 20px" onclick="hrd('+i+',\''+c.name+'\',\''+(c.email||'')+'\',\'approve\')">✓ Approve for interview</button><button class="btn btn-er" style="padding:8px 20px" onclick="hrd('+i+',\''+c.name+'\',\''+(c.email||'')+'\',\'reject\')">✕ Reject</button></div>';}
+    else if(isRe){h+='<div style="font-size:12px;color:var(--err);font-weight:500;padding:10px 14px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs)">✕ Rejected — email sent</div>';}
+    else{h+='<div class="flex gap"><button class="btn btn-ok" style="padding:8px 20px" onclick="hrd('+i+',\''+c2.name+'\',\''+(c2.email||'')+'\',\'approve\')">✓ Approve</button><button class="btn btn-er" style="padding:8px 20px" onclick="hrd('+i+',\''+c2.name+'\',\''+(c2.email||'')+'\',\'reject\')">✕ Reject</button></div>';}
     h+='</div>';
   });h+='</div>';m.innerHTML=h;
 }
+function hrd(idx,name,email,dec){
+  if(dec==='reject'&&!confirm('Reject '+name+'?'))return;
+  fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,decision:dec})}).then(function(r){return r.json()}).then(function(){renderCandidatesTab();});
+}
+
 function hrd(idx,name,email,dec){
   if(dec==='reject'&&!confirm('Reject '+name+'? Rejection email will be sent.'))return;
   fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,decision:dec})}).then(function(r){return r.json()}).then(function(){renderCandidatesTab();});
 }
 async function renderAllCandidates(){
-  var m=document.getElementById('main');await lp();
+  var m=document.getElementById('main');
+  m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading...</div></div>';
+  await lp();
+  if(!P.length){m.innerHTML='<div class="page"><div style="text-align:center;padding:80px 20px"><div style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:var(--a2bg);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--a2')+'" stroke-width="1.5"/><path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--a2')+'" stroke-width="1.5" stroke-linecap="round"/></svg></div><h3 style="font-size:18px;font-weight:600;color:var(--t1);margin-bottom:6px">No candidates yet</h3><p style="font-size:14px;color:var(--t3);max-width:360px;margin:0 auto 20px;line-height:1.6">Candidates will appear here once they apply through your careers page or you upload their resumes.</p><div class="flex gap" style="justify-content:center"><button class="btn btn-p" onclick="openModal()">+ Create pipeline</button></div></div></div>';return;}
+  var hasCands=false;
+  var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">All candidates</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">Across all pipelines</p>';
+  for(var i=0;i<P.length;i++){var p=P[i];var r=await api('/pipelines/'+p.id+'/candidates');
+    if(r?.candidates?.length){hasCands=true;h+='<div style="font-size:14px;font-weight:500;color:var(--a1);margin:16px 0 8px;cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')">'+(p.role_title||p.config?.role_title||'Pipeline')+' →</div>';
+    r.candidates.forEach(function(c){var col=c.screening_score>=60?'ok':c.screening_score>=45?'warn':'err';h+='<div class="cr"><div class="cav2" style="background:var(--'+col+'bg);color:var(--'+col+')">'+((c.name||'?').slice(0,2).toUpperCase())+'</div><div class="ci"><div class="cn">'+c.name+'</div><div class="cm">'+(c.email||'')+'</div></div><span class="bdg b-'+col+'">'+(c.screening_verdict||'pending')+'</span></div>';});}}
+  if(!hasCands){h+='<div style="text-align:center;padding:60px 20px"><div style="width:70px;height:70px;margin:0 auto 16px;border-radius:16px;background:var(--a2bg);display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.5">◎</div><h3 style="font-size:16px;font-weight:500;color:var(--t3)">No candidates across any pipeline</h3><p style="font-size:13px;color:var(--t3);margin-top:6px">Create a pipeline and share the careers page to start receiving applications</p></div>';}
+  h+='</div>';m.innerHTML=h;
+}
+
+async function renderInterviews(){
+  var m=document.getElementById('main');
+  m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading interviews...</div></div>';
+  var results=[],scheduled=[],approved=false;
+  try{results=(await tFetch('/api/v1/interview/results')).results||[];}catch(e){}
+  try{scheduled=(await tFetch('/api/v1/scheduled-interviews')).interviews||[];}catch(e){}
+  try{var st=await tFetch('/api/v1/interview/shortlist-status');approved=st.approved_pipelines&&st.approved_pipelines.length>0;}catch(e){}
+  var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">Interviews & scheduling</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">80% screening + 20% interview = composite score</p>';
+  if(results.length){results.forEach(function(r,i){var cs=r.composite_score||0,is2=r.interview_score||0,ss=r.screening_score||0;var sl=cs>=50,col=sl?'ok':'err';var isSch=scheduled.some(function(s2){return s2.candidate_name===r.candidate_name});
+    h+='<div class="cr fi" id="iv_'+i+'" style="flex-wrap:wrap"><div class="cav2" style="background:var(--a3bg);color:var(--a3t);border:1px solid var(--a3b)">'+(r.candidate_name||'?').slice(0,2).toUpperCase()+'</div><div class="ci"><div class="cn">'+r.candidate_name+'</div><div class="cm">Screening: <strong style="color:var(--a2)">'+ss+'</strong>/100 (80%) · Interview: <strong style="color:var(--a3)">'+is2+'</strong>/100 (20%)</div></div><div class="cs"><div class="n" style="color:var(--'+col+')">'+cs+'</div><div class="lb">Composite</div></div><span class="bdg b-'+col+'">'+(sl?'Shortlisted':'Not shortlisted')+'</span>';
+    if(!isSch&&r.hr_decision==='qualify')h+='<span style="font-size:11px;color:var(--ok);font-weight:500;margin-left:8px;padding:6px 12px;background:var(--okbg);border-radius:var(--rs);border:1px solid var(--oks)">Qualified by HR</span>';
+    else if(!isSch&&r.hr_decision==='reject')h+='<span style="font-size:11px;color:var(--err);font-weight:500;margin-left:8px;padding:6px 12px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs)">Rejected</span>';
+    else if(!isSch)h+='<div class="flex gap" style="margin-left:8px"><button class="btn btn-ok" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivd(this.dataset.s,+this.dataset.i,\'qualify\')">✓ Qualify</button><button class="btn btn-er" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivd(this.dataset.s,+this.dataset.i,\'reject\')">✕ Reject</button></div>';
+    if(isSch)h+='<span style="font-size:11px;color:var(--ok);margin-left:8px">✓ Scheduled</span>';h+='</div>';});
+    if(!approved)h+='<div style="background:var(--warnbg);border:1px solid var(--warns);border-radius:var(--r);padding:14px 18px;margin:16px 0;display:flex;align-items:center;gap:12px"><div style="width:8px;height:8px;border-radius:50%;background:var(--warn)"></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--warn)">Checkpoint 3: Approve shortlist</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Qualify or reject, then approve to enable scheduling</div></div><button class="btn btn-ok" onclick="appSL()">✓ Approve</button></div>';}
+  if(approved){var qualified=results.filter(function(r2){return(r2.composite_score||0)>=50||r2.hr_decision==='qualify'});
+    if(qualified.length&&!scheduled.length){h+='<div style="font-size:14px;font-weight:500;color:var(--ok);margin:20px 0 12px">✓ Shortlist approved — schedule final interviews</div>';qualified.forEach(function(q){var sid=q.session_id;
+      h+='<div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:12px">'+q.candidate_name+' <span class="bdg b-ok">Qualified</span></div><div class="flex gap mb"><div style="flex:1"><label>Date</label><input type="date" id="dt_'+sid+'" value="2026-04-20"></div><div style="flex:1"><label>Time</label><input type="time" id="tm_'+sid+'" value="15:00"></div><div style="flex:1"><label>Duration</label><input type="number" id="dur_'+sid+'" value="60"></div></div><div id="interviewers_'+sid+'"><div class="flex gap mb"><div style="flex:2"><label>Interviewer</label><input id="in_'+sid+'_0" placeholder="Name"></div><div style="flex:2"><label>Email</label><input id="ie_'+sid+'_0" placeholder="email@ruh.ai"></div><div style="flex:1"><label>Role</label><input id="ir_'+sid+'_0" placeholder="CTO"></div></div></div><div class="flex gap"><button class="btn" data-sid="'+sid+'" onclick="addIv(this.dataset.sid)">+ Add interviewer</button><button class="btn btn-p" data-sid="'+sid+'" data-nm="'+q.candidate_name+'" data-em="'+(q.candidate_email||'')+'" onclick="schIv(this.dataset.sid,this.dataset.nm,this.dataset.em)">Schedule & send invites</button></div></div>';});}}
+  if(scheduled.length){h+='<div style="font-size:14px;font-weight:500;color:var(--warn);margin:20px 0 12px">Scheduled final interviews</div>';scheduled.forEach(function(s2){
+    h+='<div class="card"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:500">'+s2.candidate_name+'</div><div style="font-size:12px;color:var(--t3)">'+s2.date+' at '+s2.time+'</div></div><span class="bdg b-w">'+s2.status+'</span></div><div style="font-size:12px;color:var(--t3);margin-bottom:10px">Meet: <a href="'+(s2.meet_link||'')+'" target="_blank" style="color:var(--a4)">'+(s2.meet_link||'pending')+'</a></div><div class="flex gap"><button class="btn btn-ok" data-n="'+s2.candidate_name+'" data-e="'+(s2.candidate_email||'')+'" onclick="fd(this.dataset.n,this.dataset.e,\'selected\')">✓ Send offer</button><button class="btn btn-er" data-n="'+s2.candidate_name+'" data-e="'+(s2.candidate_email||'')+'" onclick="fd(this.dataset.n,this.dataset.e,\'rejected\')">✕ Not selected</button></div></div>';});}
+  if(!results.length&&!scheduled.length)h+='<div style="text-align:center;padding:80px 20px"><div style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:var(--a3bg);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" fill="none" viewBox="0 0 24 24"><path d="M15 10l-4 4-2-2" stroke="#D85A30" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="3" width="18" height="18" rx="4" stroke="#D85A30" stroke-width="1.5"/></svg></div><h3 style="font-size:18px;font-weight:600;color:var(--t1);margin-bottom:6px">No interviews yet</h3><p style="font-size:14px;color:var(--t3);max-width:380px;margin:0 auto 20px;line-height:1.6">AI interviews will appear here after candidates complete screening and receive interview invites.</p><button class="btn btn-p" onclick="openModal()">+ Create pipeline</button></div>';
+  h+='</div>';m.innerHTML=h;
+}
+function ivd(sid,idx,dec){if(dec==='reject'&&!confirm('Reject? Email will be sent.'))return;fetch('/api/v1/interview/hr-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,decision:dec})}).then(function(r){return r.json()}).then(function(){renderInterviews();});}
+async function renderAllCandidates(){
+  var m=document.getElementById('main');
+  m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading...</div></div>';
+  await lp();
   if(!P.length){m.innerHTML='<div class="page"><div style="text-align:center;padding:80px 20px"><div style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:var(--a2bg);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--a2')+'" stroke-width="1.5"/><path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--a2')+'" stroke-width="1.5" stroke-linecap="round"/></svg></div><h3 style="font-size:18px;font-weight:600;color:var(--t1);margin-bottom:6px">No candidates yet</h3><p style="font-size:14px;color:var(--t3);max-width:360px;margin:0 auto 20px;line-height:1.6">Candidates will appear here once they apply through your careers page or you upload their resumes.</p><div class="flex gap" style="justify-content:center"><button class="btn btn-p" onclick="openModal()">+ Create pipeline</button></div></div></div>';return;}
   var hasCands=false;
   var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">All candidates</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">Across all pipelines</p>';
@@ -334,7 +390,9 @@ async function renderInterviews(){
 }
 
 async function renderAudit(){
-  var m=document.getElementById('main');if(!SP){m.innerHTML='<div class="page"><div class="empty"><div class="ei">☰</div><h3>No pipeline selected</h3></div></div>';return;}
+  var m=document.getElementById('main');
+  m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading...</div></div>';
+  if(!SP){m.innerHTML='<div class="page"><div class="empty"><div class="ei">☰</div><h3>No pipeline selected</h3></div></div>';return;}
   var d=await api('/pipelines/'+SP);if(!(d.audit_log||[]).length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">☰</div><h3>No audit entries</h3></div></div>';return;}
   var h='<div class="page">';d.audit_log.slice().reverse().forEach(function(e){var ac=e.agent==='agent_1'?'a1':e.agent==='agent_2'?'a2':e.agent==='agent_3'?'a3':'a4';
     h+='<div style="font-size:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);display:flex;align-items:center;gap:10px;margin-bottom:6px" class="fi"><span class="bdg b-'+ac+'">'+e.agent+'</span><span style="color:var(--t2)">'+e.action+'</span><span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:var(--mono)">'+(e.explanation||'').slice(0,80)+'</span></div>';});
