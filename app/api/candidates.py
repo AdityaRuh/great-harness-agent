@@ -105,11 +105,12 @@ async def list_candidates(pipeline_id: str):
 
     result = []
     for c in candidates:
-        profile = c.get("parsed_profile", {})
+        profile = c.get("candidate", c.get("parsed_profile", {}))
+        app_data = c.get("application_data", {})
         screening = c.get("screening_result", {})
         result.append({
-            "name": profile.get("name", "unknown"),
-            "email": profile.get("email"),
+            "name": profile.get("name") or app_data.get("name", "unknown"),
+            "email": profile.get("email") or app_data.get("email"),
             "candidate_type": c.get("candidate_type"),
             "screening_score": screening.get("total_score"),
             "screening_verdict": screening.get("verdict"),
