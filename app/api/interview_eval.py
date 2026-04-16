@@ -38,7 +38,8 @@ async def get_interview_questions(session_id: str):
     # Also return candidate info if available
     meta = _interview_question_meta.get(session_id, {})
     return {"session_id": session_id, "questions": questions, "total": len(questions),
-            "candidate_name": meta.get("name", ""), "candidate_email": meta.get("email", "")}
+            "candidate_name": meta.get("name", ""), "candidate_email": meta.get("email", ""),
+            "screening_score": meta.get("screening_score", 0)}
 
 @router.post("/api/v1/interview/evaluate")
 async def evaluate_interview(data: TranscriptSubmission):
@@ -115,18 +116,27 @@ If the candidate gave very short or empty answers, score accordingly."""
     }
 
     # Calculate composite: 80% screening + 20% interview
-    # Try to get screening score from applications
     screening_score = 0
-    try:
-        from app.api.careers import _applications
-        for pid, apps in _applications.items():
-            for app in apps:
-                if app.get("name") == data.candidate_name or app.get("email") == data.candidate_email:
-                    sr = app.get("screening_result", {})
-                    screening_score = sr.get("total_score", 0)
-                    break
-    except Exception:
-        pass
+    # First try session metadata (set when invite was sent)
+    meta = _interview_question_meta.get(data.session_id, {})
+    if meta.get("screening_score"):
+        screening_score = meta["screening_score"]
+    else:
+        # Fallback: search applications
+        try:
+            from app.api.careers import _applications
+            for pid, apps in _applications.items():
+                for app in apps:
+                    app_name = app.get("name", "")
+                    app_email = app.get("email", "")
+                    cand = app.get("candidate", {})
+                    if (app_name == data.candidate_name or app_email == data.candidate_email
+                        or cand.get("name") == data.candidate_name or cand.get("email") == data.candidate_email):
+                        sr = app.get("screening_result", {})
+                        screening_score = sr.get("total_score", 0)
+                        break
+        except Exception:
+            pass
 
     composite_score = round(0.8 * screening_score + 0.2 * interview_score)
     shortlisted = composite_score >= 50
