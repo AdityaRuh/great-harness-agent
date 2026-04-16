@@ -336,7 +336,6 @@ async function renderAllCandidates(){
   for(var i=0;i<P.length;i++){var p=P[i];var r=await api('/pipelines/'+p.id+'/candidates');
     if(r?.candidates?.length){hasCands=true;h+='<div style="font-size:14px;font-weight:500;color:var(--a1);margin:16px 0 8px;cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')">'+(p.role_title||p.config?.role_title||'Pipeline')+' →</div>';
     r.candidates.forEach(function(c){var col=c.screening_score>=60?'ok':c.screening_score>=45?'warn':'err';h+='<div class="cr"><div class="cav2" style="background:var(--'+col+'bg);color:var(--'+col+')">'+((c.name||'?').slice(0,2).toUpperCase())+'</div><div class="ci"><div class="cn">'+c.name+'</div><div class="cm">'+(c.email||'')+'</div></div><span class="bdg b-'+col+'">'+(c.screening_verdict||'pending')+'</span></div>';});}}
-  if(!hasCands){h+='<div style="text-align:center;padding:60px 20px"><div style="width:70px;height:70px;margin:0 auto 16px;border-radius:16px;background:var(--a2bg);display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.5">◎</div><h3 style="font-size:16px;font-weight:500;color:var(--t3)">No candidates across any pipeline</h3><p style="font-size:13px;color:var(--t3);margin-top:6px">Create a pipeline and share the careers page to start receiving applications</p></div>';}
   h+='</div>';m.innerHTML=h;
 }
 
@@ -384,7 +383,6 @@ async function renderAudit(){
   var d=await api('/pipelines/'+SP);if(!(d.audit_log||[]).length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">☰</div><h3>No audit entries</h3></div></div>';return;}
   var h='<div class="page">';d.audit_log.slice().reverse().forEach(function(e){var ac=e.agent==='agent_1'?'a1':e.agent==='agent_2'?'a2':e.agent==='agent_3'?'a3':'a4';
     h+='<div style="font-size:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);display:flex;align-items:center;gap:10px;margin-bottom:6px" class="fi"><span class="bdg b-'+ac+'">'+e.agent+'</span><span style="color:var(--t2)">'+e.action+'</span><span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:var(--mono)">'+(e.explanation||'').slice(0,80)+'</span></div>';});
-  if(!hasCands){h+='<div style="text-align:center;padding:60px 20px"><div style="width:70px;height:70px;margin:0 auto 16px;border-radius:16px;background:var(--a2bg);display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.5">◎</div><h3 style="font-size:16px;font-weight:500;color:var(--t3)">No candidates across any pipeline</h3><p style="font-size:13px;color:var(--t3);margin-top:6px">Create a pipeline and share the careers page to start receiving applications</p></div>';}
   h+='</div>';m.innerHTML=h;
 }
 
