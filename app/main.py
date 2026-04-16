@@ -101,20 +101,47 @@ async def health():
 
 @app.get("/interview/{session_id}")
 async def interview_page(session_id: str):
-    """Serve the micro1-style interview UI."""
+    """Serve the interview UI — or 'completed' page if already done."""
     from fastapi.responses import HTMLResponse
     from pathlib import Path
+    from app.api.interview_eval import _interview_results
     settings = get_settings()
-    
+
+    # Check if interview already completed
+    if session_id in _interview_results:
+        result = _interview_results[session_id]
+        return HTMLResponse(content=f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Interview Complete — Ruh AI</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'DM Sans',-apple-system,sans-serif;background:#0a0a1a;color:#e0e0e0;height:100vh;display:flex;align-items:center;justify-content:center}}
+.card{{max-width:500px;text-align:center;padding:48px;background:#12151B;border:1px solid #1E2230;border-radius:16px}}
+.icon{{font-size:64px;margin-bottom:24px}}
+h1{{font-size:24px;margin-bottom:12px;color:#4ade80}}
+p{{color:#6B7394;font-size:14px;line-height:1.6;margin-bottom:16px}}
+.score{{font-size:48px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#7c6ef0;margin:16px 0}}
+.verdict{{display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  background:rgba(124,110,240,0.1);border:1px solid rgba(124,110,240,0.3);color:#a29bfe}}
+</style></head><body>
+<div class="card">
+  <div class="icon">✅</div>
+  <h1>Interview Complete</h1>
+  <p>Thank you, <strong>{result.get('candidate_name', 'Candidate')}</strong>! Your interview has already been submitted and evaluated.</p>
+  <div class="score">{result.get('interview_score', 'N/A')}/100</div>
+  <div class="verdict">{result.get('verdict', 'Evaluated')}</div>
+  <p style="margin-top:24px">You will receive detailed results via email within 24 hours. If you have questions, please contact <strong>hr@ruh.ai</strong>.</p>
+</div></body></html>""")
+
     template = (Path(__file__).parent / "static" / "interview.html").read_text()
-    
-    clawvatar_ws = settings.clawvatar_url  # ws://localhost:8765
+
+    clawvatar_ws = settings.clawvatar_url
     clawvatar_http = clawvatar_ws.replace("ws://", "http://").replace("wss://", "https://")
     avatar_url = f"{settings.app_url}/static/avatars/interviewer.vrm"
-    
+
     html = template.replace("__CLAWVATAR_WS__", clawvatar_ws)
     html = html.replace("__CLAWVATAR_HTTP__", clawvatar_http)
     html = html.replace("__AVATAR_URL__", avatar_url)
     html = html.replace("__SESSION_ID__", session_id)
-    
+
     return HTMLResponse(content=html)
