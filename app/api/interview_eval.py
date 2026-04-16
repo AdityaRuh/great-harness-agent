@@ -41,6 +41,24 @@ async def get_interview_questions(session_id: str):
             "candidate_name": meta.get("name", ""), "candidate_email": meta.get("email", ""),
             "screening_score": meta.get("screening_score", 0)}
 
+
+
+@router.get("/api/v1/interview/pending")
+async def get_pending_interviews():
+    """Get interviews that are pending (invite sent but not completed)."""
+    pending = []
+    for sid, meta in _interview_question_meta.items():
+        if sid not in _interview_results:
+            pending.append({
+                "session_id": sid,
+                "candidate_name": meta.get("name", "Unknown"),
+                "candidate_email": meta.get("email", ""),
+                "screening_score": meta.get("screening_score", 0),
+                "status": "invite_sent",
+                "questions_count": len(_interview_questions.get(sid, [])),
+            })
+    return {"pending": pending, "total": len(pending)}
+
 @router.post("/api/v1/interview/evaluate")
 async def evaluate_interview(data: TranscriptSubmission):
     """Evaluate a completed interview transcript using Claude."""
