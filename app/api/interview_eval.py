@@ -212,8 +212,13 @@ async def list_interview_results():
             {
                 "session_id": sid,
                 "candidate_name": r["candidate_name"],
+                "candidate_email": r.get("candidate_email", ""),
                 "interview_score": r["interview_score"],
+                "screening_score": r.get("screening_score", 0),
+                "composite_score": r.get("composite_score", 0),
+                "shortlisted": r.get("shortlisted", False),
                 "verdict": r["verdict"],
+                "hr_decision": _interview_hr_decisions.get(sid, {}).get("decision", ""),
             }
             for sid, r in _interview_results.items()
         ],

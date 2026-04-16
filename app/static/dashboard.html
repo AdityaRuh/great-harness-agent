@@ -87,7 +87,7 @@ async function rint(m){
       h+='<p style="font-size:13px;color:var(--tm);margin-bottom:12px">Review results above. Qualify or reject candidates, then approve to enable scheduling.</p>';
       h+='<button class="btn btn-ok" onclick="approveShortlist()">✓ Approve Shortlist & Enable Scheduling</button></div>';}
   }
-  if(approved){var qualified=results.filter(function(r){return(r.composite_score||0)>=50});
+  if(approved){var qualified=results.filter(function(r){return(r.composite_score||0)>=50||r.hr_decision==='qualify'});
     if(qualified.length&&!scheduled.length){
       h+='<div style="font-size:15px;font-weight:600;color:var(--ok);margin:24px 0 12px">✓ Shortlist Approved — Schedule Final Interviews</div>';
       for(var j=0;j<qualified.length;j++){var q=qualified[j];var sid=q.session_id;
