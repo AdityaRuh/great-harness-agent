@@ -30,7 +30,7 @@ def _call_claude_cli(prompt: str, model: str | None = None) -> str:
             cmd,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=240,
         )
         if result.returncode != 0:
             logger.error(f"claude CLI failed: {result.stderr[:500]}")
