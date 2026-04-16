@@ -209,7 +209,10 @@ async function renderOverview(m){
 
 async function renderPipeline(m){
   var d=await api('/pipelines/'+SP);if(d?.error){m.innerHTML='<div style="color:var(--err);padding:40px">'+d.error+'</div>';return;}
-  var hp=!!d.current_checkpoint&&!d.processing;var s=d.status||'';
+  var s=d.status||'';
+  var cpMap={'jd_approval':['jd_pending_approval'],'ranking_review':['ranking_complete','screening_complete'],'shortlist_confirmation':['shortlist_ready'],'final_verdict':['interviews_evaluated']};
+  var validCp=d.current_checkpoint&&(cpMap[d.current_checkpoint]||[]).indexOf(s)>=0;
+  var hp=validCp&&!d.processing;
   var a1ok=['jd_pending_approval','jd_approved','ranking_approved','ranking_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a2ok=['ranking_complete','ranking_approved','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
