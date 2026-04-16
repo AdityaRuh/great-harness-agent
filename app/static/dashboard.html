@@ -163,32 +163,34 @@ function closeModal(){document.getElementById('modalBg').classList.remove('show'
 document.getElementById('ctBtns').onclick=function(e){if(!e.target.dataset.v)return;CT=e.target.dataset.v;document.querySelectorAll('#ctBtns .btn').forEach(function(b){b.className=b.dataset.v===CT?'btn btn-p':'btn';b.style.fontSize='11px';b.style.padding='5px 12px';});};
 
 async function api(p,o){o=o||{};try{var r=await fetch(A+p,{headers:{'Content-Type':'application/json'},method:o.method||'GET',body:o.body});return await r.json();}catch(e){return{error:e.message};}}
-function go(v,pid){V=v;SP=pid||null;render();}
+function go(v,pid){V=v;if(pid!==undefined)SP=pid;if(v==='overview')SP=null;render();}
 function sb(s){var m={draft:['Draft','a1'],started:['Started','a1'],analyzing:['Analyzing','a1'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],screening_complete:['Screened','a2'],ranking_complete:['Ranked','a2'],ranking_approved:['Ranking Approved','a2'],ranking_approved:['Ranking Approved','a2'],shortlist_ready:['Shortlist','w'],invites_sent:['Invites Sent','a3'],questions_generated:['Questions Ready','a3'],completed:['Complete','ok']};var x=m[s]||[s||'—','a1'];return '<span class="bdg b-'+x[1]+'">'+x[0]+'</span>';}
 async function lp(){P=await api('/pipelines');if(!Array.isArray(P))P=[];}
 
 function renderNav(){
   var tabs='',right='';
-  if(V==='pipeline'||V==='candidates'||V==='audit'){
+  if(SP){
+    // Inside a pipeline — show pipeline tabs
     tabs='<div class="tab'+(V==='pipeline'?' on':'')+'" data-t="pipeline">Timeline</div><div class="tab'+(V==='candidates'?' on':'')+'" data-t="candidates">Candidates</div><div class="tab'+(V==='interviews'?' on':'')+'" data-t="interviews">Interviews</div><div class="tab'+(V==='audit'?' on':'')+'" data-t="audit">Audit</div>';
-    right='<button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
+    right='<button class="btn" onclick="go(\'overview\')" style="font-size:12px;margin-right:8px">← Back</button><button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
   } else {
-    tabs='<div class="tab'+(V==='overview'?' on':'')+'" data-t="overview">Overview</div><div class="tab'+(V==='allcandidates'?' on':'')+'" data-t="allcandidates">Candidates</div><div class="tab'+(V==='interviews'?' on':'')+'" data-t="interviews">Interviews</div>';
+    // Overview — no tabs, just the button
+    tabs='';
     right='<button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
   }
   document.getElementById('mainTabs').innerHTML=tabs;
   document.getElementById('topRight').innerHTML=right;
-  document.getElementById('mainTabs').onclick=function(e){if(!e.target.dataset.t)return;go(e.target.dataset.t,SP);};
+  document.getElementById('mainTabs').onclick=function(e){if(!e.target.dataset.t)return;var t=e.target.dataset.t;V=t;render();};
 }
 
 async function render(){
   renderNav();var m=document.getElementById('main');
   if(V==='overview')await renderOverview(m);
   else if(V==='pipeline'&&SP)await renderPipeline(m);
-  else if(V==='allcandidates')await renderAllCandidates();
-  else if(V==='candidates')await renderCandidatesTab();
+  else if(V==='candidates'&&SP)await renderCandidatesTab();
   else if(V==='interviews')await renderInterviews();
-  else if(V==='audit')await renderAudit();
+  else if(V==='audit'&&SP)await renderAudit();
+  else await renderOverview(m);
 }
 
 async function renderOverview(m){
