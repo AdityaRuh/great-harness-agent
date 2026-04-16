@@ -44,7 +44,7 @@ Repo Analysis Available:
 Generate 5 repo-specific questions about their actual code.
 """
     else:
-        repo_context = "No repo available — skip repo-specific questions, add 5 more technical questions instead."
+        repo_context = "No repo available — skip repo-specific questions, add 3 more technical questions instead."
 
     prompt = f"""Generate a technical interview question set for this candidate.
 These questions will be asked by an AI avatar interviewer — write them in natural spoken language.
@@ -63,12 +63,12 @@ Screening strengths: {strengths}
 Screening gaps: {gaps}
 {repo_context}
 
-=== GENERATE 25 QUESTIONS ===
+=== GENERATE 15 QUESTIONS ===
 
 Return JSON:
 {{
     "candidate_name": "{name}",
-    "total_questions": 25,
+    "total_questions": 15,
     "estimated_duration_minutes": 20,
     "questions": [
         {{
@@ -101,7 +101,7 @@ Rules for question text:
 """
 
     try:
-        questions = call_llm_json(prompt, model="claude-opus-4-20250514")
+        questions = call_llm_json(prompt)
         logger.info(
             f"Generated {len(questions.get('questions', []))} questions for {name} "
             f"(est. {questions.get('estimated_duration_minutes', 0)} min)"
