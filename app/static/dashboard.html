@@ -100,7 +100,7 @@ async function rint(m){
         h+='<div style="flex:2"><label>Email</label><input id="ie_'+sid+'_0" placeholder="email@ruh.ai"></div>';
         h+='<div style="flex:1"><label>Role</label><input id="ir_'+sid+'_0" placeholder="CTO"></div></div></div>';
         h+='<div class="flex gap"><button class="btn btn-g" data-sid="'+sid+'" onclick="addInterviewer(this.dataset.sid)">+ Add Interviewer</button>';
-        h+='<button class="btn btn-p" data-sid="'+sid+'" data-nm="'+q.candidate_name+'" onclick="scheduleInterview(this.dataset.sid,this.dataset.nm,\'\')">Schedule & Send Invites</button></div></div>';}}}
+        h+='<button class="btn btn-p" data-sid="'+sid+'" data-nm="'+q.candidate_name+'" data-em="'+(q.candidate_email||'')+'" onclick="scheduleInterview(this.dataset.sid,this.dataset.nm,this.dataset.em)">Schedule & Send Invites</button></div></div>';}}}
   if(scheduled.length){h+='<div style="font-size:15px;font-weight:600;color:var(--warn);margin:24px 0 12px">Scheduled Final Interviews</div>';
     for(var k=0;k<scheduled.length;k++){var s=scheduled[k];
       h+='<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">'+s.candidate_name+'</div>';
