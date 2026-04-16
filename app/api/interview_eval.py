@@ -16,6 +16,7 @@ _interview_results: dict[str, dict] = {}
 
 # Store generated questions per session
 _interview_questions: dict[str, list] = {}
+_interview_question_meta: dict[str, dict] = {}  # {session_id: {name, email}}
 
 
 class TranscriptSubmission(BaseModel):
@@ -32,7 +33,10 @@ class TranscriptSubmission(BaseModel):
 async def get_interview_questions(session_id: str):
     """Get generated questions for an interview session."""
     questions = _interview_questions.get(session_id, [])
-    return {"session_id": session_id, "questions": questions, "total": len(questions)}
+    # Also return candidate info if available
+    meta = _interview_question_meta.get(session_id, {})
+    return {"session_id": session_id, "questions": questions, "total": len(questions),
+            "candidate_name": meta.get("name", ""), "candidate_email": meta.get("email", "")}
 
 @router.post("/api/v1/interview/evaluate")
 async def evaluate_interview(data: TranscriptSubmission):

@@ -46,6 +46,8 @@ def send_interview_invites(
             q_list = questions_data.get("questions", [])
             if q_list:
                 _interview_questions[session_id] = q_list
+                from app.api.interview_eval import _interview_question_meta
+                _interview_question_meta[session_id] = {"name": name, "email": email}
                 logger.info(f"Generated {len(q_list)} tailored questions for {name} (session {session_id[:8]})")
         except Exception as qe:
             logger.warning(f"Question generation failed for {name}: {qe}")
