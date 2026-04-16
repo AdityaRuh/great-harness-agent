@@ -266,12 +266,32 @@ async function createPipeline(){
 
 async function renderCandidatesTab(){
   var m=document.getElementById('main');var r=await api('/pipelines/'+SP+'/candidates');
-  if(!r?.candidates?.length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">◎</div><h3>No candidates yet</h3></div></div>';return;}
-  var h='<div class="page">';r.candidates.forEach(function(c,i){var col=c.screening_score>=60?'ok':c.screening_score>=45?'warn':'err';
-    h+='<div class="cr fi" id="cd_'+i+'"><div class="cav2" style="background:var(--'+col+'bg);color:var(--'+col+');border:1px solid var(--'+col+'s)">'+(c.name||'?').slice(0,2).toUpperCase()+'</div><div class="ci"><div class="cn">'+c.name+(c.escalated?' <span style="font-size:10px;color:var(--warn)">⚠ ESCALATED</span>':'')+'</div><div class="cm">'+(c.candidate_type||'')+' · '+(c.email||'')+'</div>'+(c.decision_note?'<div style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4">'+c.decision_note.slice(0,200)+'</div>':'')+(c.red_flags?.length?'<div style="font-size:10px;color:var(--err);margin-top:3px">Red flags: '+c.red_flags.join(', ')+'</div>':'')+'</div>'+(c.screening_score!=null?'<div class="cs"><div class="n" style="color:var(--'+col+')">'+c.screening_score+'</div><div class="lb">Screening</div></div>':'')+'<span class="bdg b-'+col+'">'+(c.screening_verdict||'pending')+'</span><div class="flex gap" style="margin-left:8px"><button class="btn btn-ok" data-i="'+i+'" data-n="'+c.name+'" data-e="'+(c.email||'')+'" onclick="hrd(this,\'approve\')">✓</button><button class="btn btn-er" data-i="'+i+'" data-n="'+c.name+'" data-e="'+(c.email||'')+'" onclick="hrd(this,\'reject\')">✕</button></div></div>';
+  if(!r?.candidates?.length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">◎</div><h3>No candidates yet</h3><p>Upload resumes or candidates apply via careers page</p></div></div>';return;}
+  var decisions={};try{decisions=await api('/pipelines/'+SP+'/candidates/decisions');}catch(e){}
+  var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">Candidates</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">'+r.candidates.length+' applicants · Review and approve for interviews</p>';
+  r.candidates.forEach(function(c,i){
+    var col=c.screening_score>=60?'ok':c.screening_score>=45?'warn':'err';
+    var scoreCol=c.screening_score>=60?'var(--ok)':c.screening_score>=45?'var(--warn)':'var(--err)';
+    var hr=decisions[c.email]||decisions[c.name]||{};
+    var isAp=hr.decision==='approve';var isRe=hr.decision==='reject';
+    h+='<div class="fi" id="cd_'+i+'" style="background:var(--bg2);border:1px solid '+(isAp?'var(--oks)':isRe?'var(--errs)':'var(--border)')+';border-radius:var(--r);padding:20px;margin-bottom:12px;'+(isRe?'opacity:.4;':'')+'transition:all .2s">';
+    h+='<div class="flex aic gap" style="margin-bottom:12px"><div style="width:42px;height:42px;border-radius:12px;background:var(--'+col+'bg);color:'+scoreCol+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border:1px solid var(--'+col+'s);flex-shrink:0">'+(c.name||'?').slice(0,2).toUpperCase()+'</div>';
+    h+='<div style="flex:1"><div style="font-size:15px;font-weight:500">'+c.name+(c.escalated?' <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:var(--warnbg);color:var(--warn);border:1px solid var(--warns);font-weight:600;vertical-align:middle">ESCALATED</span>':'')+'</div>';
+    h+='<div style="font-size:12px;color:var(--t3);margin-top:2px">'+(c.candidate_type||'experienced')+' · '+(c.email||'')+'</div></div>';
+    h+='<div style="text-align:center;min-width:60px"><div style="font-size:28px;font-weight:700;font-family:var(--mono);color:'+scoreCol+';letter-spacing:-2px">'+(c.screening_score!=null?c.screening_score:'—')+'</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Score</div></div>';
+    h+='<span class="bdg b-'+col+'" style="margin-left:8px">'+(c.screening_verdict||'pending')+'</span></div>';
+    if(c.decision_note){h+='<div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;padding:12px 14px;background:var(--bg3);border-radius:var(--rs)">'+c.decision_note.slice(0,300)+'</div>';}
+    if(c.red_flags&&c.red_flags.length){h+='<div style="font-size:11px;color:var(--err);margin-bottom:12px;padding:10px 14px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs);line-height:1.5"><strong>Red flags:</strong> '+c.red_flags.join(' · ')+'</div>';}
+    if(isAp){h+='<div style="font-size:12px;color:var(--ok);font-weight:500;padding:10px 14px;background:var(--okbg);border-radius:var(--rs);border:1px solid var(--oks)">✓ Approved by HR for interviews</div>';}
+    else if(isRe){h+='<div style="font-size:12px;color:var(--err);font-weight:500;padding:10px 14px;background:var(--errbg);border-radius:var(--rs);border:1px solid var(--errs)">✕ Rejected by HR — rejection email sent</div>';}
+    else{h+='<div class="flex gap"><button class="btn btn-ok" style="padding:8px 20px" onclick="hrd('+i+',\''+c.name+'\',\''+(c.email||'')+'\',\'approve\')">✓ Approve for interview</button><button class="btn btn-er" style="padding:8px 20px" onclick="hrd('+i+',\''+c.name+'\',\''+(c.email||'')+'\',\'reject\')">✕ Reject</button></div>';}
+    h+='</div>';
   });h+='</div>';m.innerHTML=h;
 }
-
+function hrd(idx,name,email,dec){
+  if(dec==='reject'&&!confirm('Reject '+name+'? Rejection email will be sent.'))return;
+  fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,decision:dec})}).then(function(r){return r.json()}).then(function(){renderCandidatesTab();});
+}
 async function renderAllCandidates(){
   var m=document.getElementById('main');await lp();
   var h='<div class="page">';
@@ -312,7 +332,6 @@ async function renderAudit(){
 // Actions
 async function acp(dec){var fb='';if(dec==='reject'){fb=prompt('Feedback:');if(!fb)return;}await api('/pipelines/'+SP+'/approve',{method:'POST',body:JSON.stringify({checkpoint:'jd_approval',decision:dec,feedback:dec==='reject'?fb:undefined})});render();}
 async function ul(f){if(!f.length)return;var fd2=new FormData();for(var i=0;i<f.length;i++)fd2.append('files',f[i]);await fetch(A+'/pipelines/'+SP+'/upload',{method:'POST',body:fd2});render();}
-function hrd(btn,dec){var n=btn.dataset.n,e=btn.dataset.e,i=btn.dataset.i;if(dec==='reject'&&!confirm('Reject '+n+'? Rejection email will be sent.'))return;fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,email:e,decision:dec})}).then(function(r){return r.json()}).then(function(){renderCandidatesTab();});}
 function ivd(sid,idx,dec){if(dec==='reject'&&!confirm('Reject?'))return;fetch('/api/v1/interview/hr-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,decision:dec})}).then(function(r){return r.json()}).then(function(){var c=document.getElementById('iv_'+idx);if(dec==='qualify'){c.style.borderColor='var(--oks)';c.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:11px;font-weight:500;margin-top:6px;width:100%">✓ Qualified</div>');}else{c.style.borderColor='var(--errs)';c.style.opacity='.4';c.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:11px;font-weight:500;margin-top:6px;width:100%">✕ Rejected</div>');}c.querySelectorAll('.btn-ok,.btn-er').forEach(function(b){b.disabled=true;});});}
 async function appSL(){await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:'approved'})});alert('Shortlist approved!');renderInterviews();}
 var _ic={};function addIv(sid){_ic[sid]=(_ic[sid]||0)+1;var n=_ic[sid];document.getElementById('interviewers_'+sid).insertAdjacentHTML('beforeend','<div class="flex gap mb"><div style="flex:2"><input id="in_'+sid+'_'+n+'" placeholder="Name"></div><div style="flex:2"><input id="ie_'+sid+'_'+n+'" placeholder="Email"></div><div style="flex:1"><input id="ir_'+sid+'_'+n+'" placeholder="Role"></div></div>');}
