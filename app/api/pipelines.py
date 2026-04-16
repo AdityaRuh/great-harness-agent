@@ -29,6 +29,7 @@ def get_graph():
 
 # In-memory pipeline registry (Phase 1 — replace with DB in Phase 2)
 _pipelines: dict[str, dict] = {}
+_running_pipelines: set = set()  # pipelines currently running graph.astream
 
 
 @router.post("", response_model=PipelineResponse)
@@ -72,9 +73,13 @@ async def create_pipeline(req: PipelineCreate):
     logger.info(f"Starting pipeline {pipeline_id}: {req.role_title} ({req.experience_level})")
 
     # Run the pipeline graph
+    _running_pipelines.add(pipeline_id)
     result = None
-    async for event in graph.astream(initial_state, config, stream_mode="values"):
-        result = event
+    try:
+        async for event in graph.astream(initial_state, config, stream_mode="values"):
+            result = event
+    finally:
+        _running_pipelines.discard(pipeline_id)
 
     # Store pipeline reference
     _pipelines[pipeline_id] = {
@@ -189,13 +194,17 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
         "verdicts": req.verdicts,
     }
 
+    _running_pipelines.add(pipeline_id)
     result = None
-    async for event in graph.astream(
-        Command(resume=resume_value),
-        config,
-        stream_mode="values",
-    ):
-        result = event
+    try:
+        async for event in graph.astream(
+            Command(resume=resume_value),
+            config,
+            stream_mode="values",
+        ):
+            result = event
+    finally:
+        _running_pipelines.discard(pipeline_id)
 
     return {
         "pipeline_id": pipeline_id,
@@ -212,12 +221,21 @@ async def list_pipelines():
     items = []
     graph = get_graph()
     for pid, pdata in _pipelines.items():
+        if pid in _running_pipelines:
+            # Don't call graph.get_state while graph is running — use cached status
+            items.append({
+                "id": pid,
+                "role_title": pdata["config"]["role_title"],
+                "status": pdata.get("last_status", "processing"),
+            })
+            continue
         config = {"configurable": {"thread_id": pid}}
         try:
             state = graph.get_state(config)
             status = state.values.get("status", "unknown") if state and state.values else "unknown"
+            pdata["last_status"] = status  # cache it
         except Exception:
-            status = "unknown"
+            status = pdata.get("last_status", "unknown")
         items.append({
             "id": pid,
             "role_title": pdata["config"]["role_title"],
