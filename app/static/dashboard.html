@@ -55,36 +55,71 @@ async function rcl(tc){const r=await api(`/pipelines/${SP}/candidates`);if(!r?.c
 async function rca(m){await lp();if(!P.length){m.innerHTML=`<div class="empty"><b>◎</b><h3>No pipelines</h3></div>`;return;}m.innerHTML=`<h2 class="mb">All Candidates</h2>`;for(const p of P){const r=await api(`/pipelines/${p.id}/candidates`);if(r?.candidates?.length){m.innerHTML+=`<div style="font-size:15px;font-weight:600;color:var(--al);margin:16px 0 8px;cursor:pointer" onclick="go('pipeline','${p.id}')">${p.role_title} →</div>`;m.innerHTML+=r.candidates.map(c=>`<div class="c" style="padding:12px"><div class="flex jcb aic"><span>${c.name}</span><span class="b b-${c.screening_verdict?.includes('Shortlisted')?'ok':'d'}">${c.screening_verdict||'pending'}</span></div></div>`).join('');}}}
 
 async function rint(m){
-  // Fetch interview results and scheduled interviews
-  let results=[],scheduled=[];
+  var results=[],scheduled=[],approved=false;
   try{results=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
   try{scheduled=(await(await fetch('/api/v1/scheduled-interviews')).json()).interviews||[];}catch(e){}
-
-  let html='<h2 class="mb">Interviews & Scheduling</h2>';
-
-  // Shortlisted from AI interview — ready to schedule
+  try{var st=await(await fetch('/api/v1/interview/shortlist-status')).json();approved=st.approved_pipelines&&st.approved_pipelines.length>0;}catch(e){}
+  var h='<h2 class="mb">Interviews & Scheduling</h2>';
   if(results.length){
-    html+='<div style="font-size:15px;font-weight:600;color:var(--al);margin-bottom:12px">AI Interview Results</div>';
-    results.forEach(function(r){
-      const col=r.interview_score>=70?'ok':r.interview_score>=55?'w':'e';
-      const isScheduled=scheduled.some(function(s){return s.candidate_name===r.candidate_name});
-      html+=`<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">${r.candidate_name}</div><div style="font-size:11px;color:var(--td)">Session: ${(r.session_id||'').slice(0,12)}...</div></div><div class="flex aic gap"><span style="font-size:20px;font-weight:700;font-family:var(--fm);color:var(--${col})">${r.interview_score}</span><span class="b b-${col}">${r.verdict}</span></div></div>${isScheduled?'<div style="font-size:12px;color:var(--ok);margin-bottom:8px">✓ Final interview scheduled</div>':''}${r.interview_score>=50&&!isScheduled?`<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px"><div style="font-size:13px;font-weight:600;margin-bottom:10px">Schedule Final Interview</div><div class="flex gap mb"><div style="flex:1"><label>Date</label><input type="date" id="dt_${r.session_id}" value="2026-04-20"></div><div style="flex:1"><label>Time</label><input type="time" id="tm_${r.session_id}" value="15:00"></div><div style="flex:1"><label>Duration (min)</label><input type="number" id="dur_${r.session_id}" value="60"></div></div><div id="interviewers_${r.session_id}"><div class="flex gap mb"><div style="flex:2"><label>Interviewer Name</label><input id="in_${r.session_id}_0" placeholder="e.g. Vaibhav"></div><div style="flex:2"><label>Email</label><input id="ie_${r.session_id}_0" placeholder="e.g. vaibhav@ruh.ai"></div><div style="flex:1"><label>Role</label><input id="ir_${r.session_id}_0" placeholder="CTO"></div></div></div><div class="flex gap"><button class="btn btn-g" onclick="addInterviewer('${r.session_id}')">+ Add Interviewer</button><button class="btn btn-p" onclick="scheduleInterview('${r.session_id}','${r.candidate_name}','')">Schedule & Send Invites</button></div></div>`:''}</div>`;
-    });
+    h+='<div style="font-size:15px;font-weight:600;color:var(--al);margin-bottom:12px">AI Interview Results (80% Screening + 20% Interview)</div>';
+    for(var i=0;i<results.length;i++){var r=results[i];
+      var cs=r.composite_score||0,is2=r.interview_score||0,ss=r.screening_score||0;
+      var sl=cs>=50,col=sl?'ok':'e';
+      var isSch=scheduled.some(function(s){return s.candidate_name===r.candidate_name});
+      h+='<div class="c" style="padding:16px" id="iv_'+i+'">';
+      h+='<div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">'+r.candidate_name+'</div>';
+      h+='<div style="font-size:11px;color:var(--td)">Session: '+(r.session_id||'').slice(0,12)+'...</div></div>';
+      h+='<div class="flex aic gap"><div style="text-align:right"><div style="font-size:24px;font-weight:700;font-family:var(--fm);color:var(--'+col+')">'+cs+'</div>';
+      h+='<div style="font-size:9px;color:var(--td)">COMPOSITE</div></div>';
+      h+='<span class="b b-'+col+'">'+(sl?'SHORTLISTED':'NOT SHORTLISTED')+'</span></div></div>';
+      h+='<div class="flex gap mb" style="font-size:12px;color:var(--tm)">';
+      h+='<span>Screening: <strong style="color:var(--al)">'+ss+'</strong>/100 (80%)</span> · ';
+      h+='<span>Interview: <strong style="color:var(--al)">'+is2+'</strong>/100 (20%)</span> · ';
+      h+='<span>Verdict: <strong>'+r.verdict+'</strong></span></div>';
+      if(!isSch){h+='<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px"><div class="flex gap">';
+        h+='<button class="btn btn-ok" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivDecision(this.dataset.s,+this.dataset.i,\'qualify\')">✓ Qualify for Final Round</button>';
+        h+='<button class="btn btn-e" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivDecision(this.dataset.s,+this.dataset.i,\'reject\')">✕ Reject</button>';
+        h+='</div></div>';}
+      if(isSch){h+='<div style="font-size:12px;color:var(--ok);margin-top:8px">✓ Final interview scheduled</div>';}
+      h+='</div>';}
+    if(!approved){h+='<div class="c glow" style="border-color:rgba(255,179,68,.3);margin-top:16px">';
+      h+='<div class="flex aic gap mb"><div class="pulse"></div><div style="font-size:15px;font-weight:600;color:var(--warn)">Checkpoint 3: Approve Interview Shortlist</div></div>';
+      h+='<p style="font-size:13px;color:var(--tm);margin-bottom:12px">Review results above. Qualify or reject candidates, then approve to enable scheduling.</p>';
+      h+='<button class="btn btn-ok" onclick="approveShortlist()">✓ Approve Shortlist & Enable Scheduling</button></div>';}
   }
+  if(approved){var qualified=results.filter(function(r){return(r.composite_score||0)>=50});
+    if(qualified.length&&!scheduled.length){
+      h+='<div style="font-size:15px;font-weight:600;color:var(--ok);margin:24px 0 12px">✓ Shortlist Approved — Schedule Final Interviews</div>';
+      for(var j=0;j<qualified.length;j++){var q=qualified[j];var sid=q.session_id;
+        h+='<div class="c" style="padding:16px"><div style="font-size:14px;font-weight:600;margin-bottom:12px">'+q.candidate_name+' <span class="b b-ok">QUALIFIED</span></div>';
+        h+='<div class="flex gap mb"><div style="flex:1"><label>Date</label><input type="date" id="dt_'+sid+'" value="2026-04-20"></div>';
+        h+='<div style="flex:1"><label>Time</label><input type="time" id="tm_'+sid+'" value="15:00"></div>';
+        h+='<div style="flex:1"><label>Duration</label><input type="number" id="dur_'+sid+'" value="60"></div></div>';
+        h+='<div id="interviewers_'+sid+'"><div class="flex gap mb">';
+        h+='<div style="flex:2"><label>Interviewer</label><input id="in_'+sid+'_0" placeholder="Name"></div>';
+        h+='<div style="flex:2"><label>Email</label><input id="ie_'+sid+'_0" placeholder="email@ruh.ai"></div>';
+        h+='<div style="flex:1"><label>Role</label><input id="ir_'+sid+'_0" placeholder="CTO"></div></div></div>';
+        h+='<div class="flex gap"><button class="btn btn-g" data-sid="'+sid+'" onclick="addInterviewer(this.dataset.sid)">+ Add Interviewer</button>';
+        h+='<button class="btn btn-p" data-sid="'+sid+'" data-nm="'+q.candidate_name+'" onclick="scheduleInterview(this.dataset.sid,this.dataset.nm,\'\')">Schedule & Send Invites</button></div></div>';}}}
+  if(scheduled.length){h+='<div style="font-size:15px;font-weight:600;color:var(--warn);margin:24px 0 12px">Scheduled Final Interviews</div>';
+    for(var k=0;k<scheduled.length;k++){var s=scheduled[k];
+      h+='<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">'+s.candidate_name+'</div>';
+      h+='<div style="font-size:12px;color:var(--tm)">'+s.date+' at '+s.time+'</div></div><span class="b b-w">'+s.status+'</span></div>';
+      h+='<div style="font-size:12px;color:var(--tm);margin-bottom:8px">Meet: <a href="'+(s.meet_link||'')+'" target="_blank" style="color:var(--al)">'+(s.meet_link||'pending')+'</a></div>';
+      h+='<div class="flex gap"><button class="btn btn-ok" data-n="'+s.candidate_name+'" data-e="'+(s.candidate_email||'')+'" onclick="finalDecision(this.dataset.n,this.dataset.e,\'selected\')">✓ Selected — Send Offer</button>';
+      h+='<button class="btn btn-e" data-n="'+s.candidate_name+'" data-e="'+(s.candidate_email||'')+'" onclick="finalDecision(this.dataset.n,this.dataset.e,\'rejected\')">✕ Not Selected</button></div></div>';}}
+  if(!results.length&&!scheduled.length){h+='<div class="empty"><b>▶</b><h3>No interviews yet</h3><p>Complete the AI screening round first</p></div>';}
+  m.innerHTML=h;}
 
-  // Scheduled interviews — pending final decision
-  if(scheduled.length){
-    html+='<div style="font-size:15px;font-weight:600;color:var(--warn);margin:24px 0 12px">Scheduled Final Interviews</div>';
-    scheduled.forEach(function(s){
-      html+=`<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">${s.candidate_name}</div><div style="font-size:12px;color:var(--tm)">${s.date} at ${s.time} · ${s.interviewers?.map(function(i){return i.name}).join(', ')}</div></div><span class="b b-w">${s.status}</span></div><div style="font-size:12px;color:var(--tm);margin-bottom:8px">Meet: <a href="${s.meet_link}" target="_blank" style="color:var(--al)">${s.meet_link||'Link pending'}</a></div><div class="flex gap"><button class="btn btn-ok" onclick="finalDecision('${s.candidate_name}','${s.candidate_email}','selected')">✓ Selected — Send Offer</button><button class="btn btn-e" onclick="finalDecision('${s.candidate_name}','${s.candidate_email}','rejected')">✕ Not Selected</button></div></div>`;
-    });
-  }
+function ivDecision(sid,idx,decision){
+  if(decision==='reject'&&!confirm('Reject? Rejection email will be sent.'))return;
+  fetch('/api/v1/interview/hr-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,decision:decision})}).then(function(r){return r.json()}).then(function(){
+    var card=document.getElementById('iv_'+idx);
+    if(decision==='qualify'){card.style.borderColor='rgba(0,214,143,.5)';card.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:12px;font-weight:600;margin-top:8px">✓ Qualified by HR</div>');}
+    else{card.style.borderColor='rgba(255,107,107,.3)';card.style.opacity='.5';card.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:12px;font-weight:600;margin-top:8px">✕ Rejected — email sent</div>');}
+    card.querySelectorAll('.btn-ok,.btn-e').forEach(function(b){b.disabled=true;b.style.opacity='.3';});});}
 
-  if(!results.length&&!scheduled.length){
-    html+='<div class="empty"><b>▶</b><h3>No interviews yet</h3><p>Complete the AI screening round first</p></div>';
-  }
-  m.innerHTML=html;
-}
+async function approveShortlist(){await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:'approved'})});alert('Shortlist approved! Scheduling now available.');rint(document.getElementById('main'));}
 
 var _ic={};
 function addInterviewer(sid){

@@ -16,6 +16,8 @@ _interview_results: dict[str, dict] = {}
 
 # Store generated questions per session
 _interview_questions: dict[str, list] = {}
+_interview_hr_decisions: dict[str, dict] = {}  # HR qualify/reject decisions
+_interview_shortlist_approved: set = set()  # pipeline_ids where HR approved shortlist
 _interview_question_meta: dict[str, dict] = {}  # {session_id: {name, email}}
 
 
@@ -112,7 +114,37 @@ If the candidate gave very short or empty answers, score accordingly."""
         "verdict": verdict,
     }
 
-    logger.info(f"Interview evaluated: {data.candidate_name} → {interview_score}/100 → {verdict}")
+    # Calculate composite: 80% screening + 20% interview
+    # Try to get screening score from applications
+    screening_score = 0
+    try:
+        from app.api.careers import _applications
+        for pid, apps in _applications.items():
+            for app in apps:
+                if app.get("name") == data.candidate_name or app.get("email") == data.candidate_email:
+                    sr = app.get("screening_result", {})
+                    screening_score = sr.get("total_score", 0)
+                    break
+    except Exception:
+        pass
+
+    composite_score = round(0.8 * screening_score + 0.2 * interview_score)
+    shortlisted = composite_score >= 50
+    shortlist_verdict = "Shortlisted for Final Round" if shortlisted else "Not Shortlisted"
+
+    evaluation["composite_score"] = composite_score
+    evaluation["screening_score"] = screening_score
+    evaluation["interview_score"] = interview_score
+    evaluation["shortlisted"] = shortlisted
+    evaluation["shortlist_verdict"] = shortlist_verdict
+    evaluation["composite_formula"] = "80% screening + 20% interview"
+
+    _interview_results[data.session_id]["composite_score"] = composite_score
+    _interview_results[data.session_id]["screening_score"] = screening_score
+    _interview_results[data.session_id]["shortlisted"] = shortlisted
+    _interview_results[data.session_id]["shortlist_verdict"] = shortlist_verdict
+
+    logger.info(f"Interview evaluated: {data.candidate_name} → interview={interview_score}, screening={screening_score}, composite={composite_score}/100 → {shortlist_verdict}")
 
     # Send result email to candidate
     if data.candidate_email:
@@ -176,3 +208,48 @@ async def list_interview_results():
             for sid, r in _interview_results.items()
         ],
     }
+
+
+@router.post("/api/v1/interview/hr-decision")
+async def hr_interview_decision(body: dict):
+    """HR manually qualifies or rejects a candidate after AI interview."""
+    session_id = body.get("session_id", "")
+    decision = body.get("decision", "")  # qualify | reject
+    note = body.get("note", "")
+
+    if session_id not in _interview_results:
+        return {"error": "Session not found"}
+
+    _interview_hr_decisions[session_id] = {"decision": decision, "note": note}
+
+    result = _interview_results[session_id]
+    logger.info(f"HR interview decision: {result.get('candidate_name')} → {decision}" + (f" — {note}" if note else ""))
+
+    # If rejected, send rejection email
+    if decision == "reject" and result.get("candidate_email"):
+        from app.integrations.email import send_email
+        send_email(
+            to=result["candidate_email"],
+            subject="Application Update — Ruh AI",
+            body_html=f"""<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+                <h2>Thank You, {result.get('candidate_name', 'Candidate')}</h2>
+                <p>After careful evaluation, we have decided to move forward with other candidates. We wish you the best.</p>
+                <p>Best regards,<br><strong>Ruh AI Hiring Team</strong></p></div>""",
+        )
+
+    return {"session_id": session_id, "decision": decision}
+
+
+@router.post("/api/v1/interview/approve-shortlist")
+async def approve_interview_shortlist(body: dict):
+    """HR approves the shortlist — only then scheduling becomes available."""
+    pipeline_id = body.get("pipeline_id", "approved")
+    _interview_shortlist_approved.add(pipeline_id)
+    logger.info(f"HR approved interview shortlist for pipeline {pipeline_id}")
+    return {"approved": True, "pipeline_id": pipeline_id}
+
+
+@router.get("/api/v1/interview/shortlist-status")
+async def shortlist_status():
+    """Check if HR has approved the shortlist."""
+    return {"approved_pipelines": list(_interview_shortlist_approved)}
