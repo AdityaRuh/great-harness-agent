@@ -163,7 +163,7 @@ document.getElementById('ctBtns').onclick=function(e){if(!e.target.dataset.v)ret
 
 async function api(p,o){o=o||{};try{var r=await fetch(A+p,{headers:{'Content-Type':'application/json'},method:o.method||'GET',body:o.body});return await r.json();}catch(e){return{error:e.message};}}
 function go(v,pid){V=v;SP=pid||null;render();}
-function sb(s){var m={draft:['Draft','a1'],started:['Started','a1'],analyzing:['Analyzing','a1'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],screening_complete:['Screened','a2'],ranking_complete:['Ranked','a2'],shortlist_ready:['Shortlist','w'],invites_sent:['Invites Sent','a3'],questions_generated:['Questions Ready','a3'],completed:['Complete','ok']};var x=m[s]||[s||'—','a1'];return '<span class="bdg b-'+x[1]+'">'+x[0]+'</span>';}
+function sb(s){var m={draft:['Draft','a1'],started:['Started','a1'],analyzing:['Analyzing','a1'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],screening_complete:['Screened','a2'],ranking_complete:['Ranked','a2'],ranking_approved:['Ranking Approved','a2'],shortlist_ready:['Shortlist','w'],invites_sent:['Invites Sent','a3'],questions_generated:['Questions Ready','a3'],completed:['Complete','ok']};var x=m[s]||[s||'—','a1'];return '<span class="bdg b-'+x[1]+'">'+x[0]+'</span>';}
 async function lp(){P=await api('/pipelines');if(!Array.isArray(P))P=[];}
 
 function renderNav(){
@@ -202,8 +202,8 @@ async function renderOverview(m){
 async function renderPipeline(m){
   var d=await api('/pipelines/'+SP);if(d?.error){m.innerHTML='<div style="color:var(--err);padding:40px">'+d.error+'</div>';return;}
   var hp=!!d.current_checkpoint;var s=d.status||'';
-  var a1ok=['jd_pending_approval','jd_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
-  var a2ok=['ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
+  var a1ok=['jd_pending_approval','jd_approved','ranking_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
+  var a2ok=['ranking_complete','ranking_approved','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
 
   // Get candidates for pills
