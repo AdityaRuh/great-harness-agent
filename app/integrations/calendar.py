@@ -74,13 +74,18 @@ def create_interview_event(
 
     end_dt = start_dt + timedelta(minutes=duration_minutes)
 
-    # Build attendees list
-    attendees = [{"email": candidate_email, "displayName": candidate_name}]
+    # Build attendees list (skip empty emails)
+    attendees = []
+    if candidate_email and "@" in candidate_email:
+        attendees.append({"email": candidate_email, "displayName": candidate_name})
     for interviewer in interviewers:
-        attendees.append({
-            "email": interviewer["email"],
-            "displayName": interviewer.get("name", ""),
-        })
+        if interviewer.get("email") and "@" in interviewer["email"]:
+            attendees.append({
+                "email": interviewer["email"],
+                "displayName": interviewer.get("name", ""),
+            })
+    if not attendees:
+        return {"error": "No valid email addresses for attendees", "meet_link": ""}
 
     event = {
         "summary": f"Technical Interview: {candidate_name} — Full Stack Developer",
