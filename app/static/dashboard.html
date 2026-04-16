@@ -302,10 +302,13 @@ function hrd(idx,name,email,dec){
 }
 async function renderAllCandidates(){
   var m=document.getElementById('main');await lp();
-  var h='<div class="page">';
+  if(!P.length){m.innerHTML='<div class="page"><div style="text-align:center;padding:80px 20px"><div style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:var(--a2bg);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--a2')+'" stroke-width="1.5"/><path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--a2')+'" stroke-width="1.5" stroke-linecap="round"/></svg></div><h3 style="font-size:18px;font-weight:600;color:var(--t1);margin-bottom:6px">No candidates yet</h3><p style="font-size:14px;color:var(--t3);max-width:360px;margin:0 auto 20px;line-height:1.6">Candidates will appear here once they apply through your careers page or you upload their resumes.</p><div class="flex gap" style="justify-content:center"><button class="btn btn-p" onclick="openModal()">+ Create pipeline</button></div></div></div>';return;}
+  var hasCands=false;
+  var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">All candidates</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">Across all pipelines</p>';
   for(var i=0;i<P.length;i++){var p=P[i];var r=await api('/pipelines/'+p.id+'/candidates');
-    if(r?.candidates?.length){h+='<div style="font-size:14px;font-weight:500;color:var(--a1);margin:16px 0 8px;cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')">'+(p.role_title||p.config?.role_title||'Pipeline')+' →</div>';
+    if(r?.candidates?.length){hasCands=true;h+='<div style="font-size:14px;font-weight:500;color:var(--a1);margin:16px 0 8px;cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')">'+(p.role_title||p.config?.role_title||'Pipeline')+' →</div>';
     r.candidates.forEach(function(c){var col=c.screening_score>=60?'ok':c.screening_score>=45?'warn':'err';h+='<div class="cr"><div class="cav2" style="background:var(--'+col+'bg);color:var(--'+col+')">'+((c.name||'?').slice(0,2).toUpperCase())+'</div><div class="ci"><div class="cn">'+c.name+'</div><div class="cm">'+(c.email||'')+'</div></div><span class="bdg b-'+col+'">'+(c.screening_verdict||'pending')+'</span></div>';});}}
+  if(!hasCands){h+='<div style="text-align:center;padding:60px 20px"><div style="width:70px;height:70px;margin:0 auto 16px;border-radius:16px;background:var(--a2bg);display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.5">◎</div><h3 style="font-size:16px;font-weight:500;color:var(--t3)">No candidates across any pipeline</h3><p style="font-size:13px;color:var(--t3);margin-top:6px">Create a pipeline and share the careers page to start receiving applications</p></div>';}
   h+='</div>';m.innerHTML=h;
 }
 
@@ -326,6 +329,7 @@ async function renderInterviews(){
   if(scheduled.length){h+='<div style="font-size:14px;font-weight:500;color:var(--warn);margin:20px 0 12px">Scheduled final interviews</div>';scheduled.forEach(function(s2){
     h+='<div class="card"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:500">'+s2.candidate_name+'</div><div style="font-size:12px;color:var(--t3)">'+s2.date+' at '+s2.time+'</div></div><span class="bdg b-w">'+s2.status+'</span></div><div style="font-size:12px;color:var(--t3);margin-bottom:10px">Meet: <a href="'+(s2.meet_link||'')+'" target="_blank" style="color:var(--a4)">'+(s2.meet_link||'pending')+'</a></div><div class="flex gap"><button class="btn btn-ok" data-n="'+s2.candidate_name+'" data-e="'+(s2.candidate_email||'')+'" onclick="fd(this.dataset.n,this.dataset.e,\'selected\')">✓ Send offer</button><button class="btn btn-er" data-n="'+s2.candidate_name+'" data-e="'+(s2.candidate_email||'')+'" onclick="fd(this.dataset.n,this.dataset.e,\'rejected\')">✕ Not selected</button></div></div>';});}
   if(!results.length&&!scheduled.length)h+='<div class="empty"><div class="ei">▷</div><h3>No interviews yet</h3><p>Complete the AI screening round first</p></div>';
+  if(!hasCands){h+='<div style="text-align:center;padding:60px 20px"><div style="width:70px;height:70px;margin:0 auto 16px;border-radius:16px;background:var(--a2bg);display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.5">◎</div><h3 style="font-size:16px;font-weight:500;color:var(--t3)">No candidates across any pipeline</h3><p style="font-size:13px;color:var(--t3);margin-top:6px">Create a pipeline and share the careers page to start receiving applications</p></div>';}
   h+='</div>';m.innerHTML=h;
 }
 
@@ -334,6 +338,7 @@ async function renderAudit(){
   var d=await api('/pipelines/'+SP);if(!(d.audit_log||[]).length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">☰</div><h3>No audit entries</h3></div></div>';return;}
   var h='<div class="page">';d.audit_log.slice().reverse().forEach(function(e){var ac=e.agent==='agent_1'?'a1':e.agent==='agent_2'?'a2':e.agent==='agent_3'?'a3':'a4';
     h+='<div style="font-size:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);display:flex;align-items:center;gap:10px;margin-bottom:6px" class="fi"><span class="bdg b-'+ac+'">'+e.agent+'</span><span style="color:var(--t2)">'+e.action+'</span><span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:var(--mono)">'+(e.explanation||'').slice(0,80)+'</span></div>';});
+  if(!hasCands){h+='<div style="text-align:center;padding:60px 20px"><div style="width:70px;height:70px;margin:0 auto 16px;border-radius:16px;background:var(--a2bg);display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.5">◎</div><h3 style="font-size:16px;font-weight:500;color:var(--t3)">No candidates across any pipeline</h3><p style="font-size:13px;color:var(--t3);margin-top:6px">Create a pipeline and share the careers page to start receiving applications</p></div>';}
   h+='</div>';m.innerHTML=h;
 }
 
