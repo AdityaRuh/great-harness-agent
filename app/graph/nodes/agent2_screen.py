@@ -1,8 +1,9 @@
 """LangGraph nodes for Agent 2 — Resume Screener & Ranker.
 
-parse_resumes → screen_candidates (fresher 10-step OR experienced 8-step) → rank_candidates
+All nodes are async with asyncio.to_thread() for blocking LLM calls.
 """
 
+import asyncio
 import logging
 
 from app.agents.screener.resume_parser import parse_resume
@@ -14,8 +15,7 @@ from app.graph.state import PipelineState
 logger = logging.getLogger(__name__)
 
 
-def agent2_parse_resumes(state: PipelineState) -> dict:
-    """Parse all uploaded resumes into structured profiles."""
+async def agent2_parse_resumes(state: PipelineState) -> dict:
     raw_candidates = state.get("candidates", [])
     if not raw_candidates:
         return {"status": "screening_no_candidates", "audit_log": [{"agent": "agent_2", "action": "no_resumes", "explanation": "No resumes uploaded."}]}
@@ -33,7 +33,7 @@ def agent2_parse_resumes(state: PipelineState) -> dict:
 
         file_bytes = raw.get("file_bytes", b"")
         filename = raw.get("filename", "unknown.pdf")
-        profile = parse_resume(file_bytes, filename, jd_skills)
+        profile = await asyncio.to_thread(parse_resume, file_bytes, filename, jd_skills)
         raw["parsed_profile"] = profile
 
         years = profile.get("total_experience_years", 0)
@@ -52,8 +52,7 @@ def agent2_parse_resumes(state: PipelineState) -> dict:
     }
 
 
-def agent2_screen_candidates(state: PipelineState) -> dict:
-    """Screen each candidate using fresher 10-step or experienced 8-step SOP."""
+async def agent2_screen_candidates(state: PipelineState) -> dict:
     candidates = state.get("candidates", [])
     skills_matrix = state.get("skills_matrix", {})
     tech_stack = state.get("tech_stack_profile", {})
@@ -77,9 +76,9 @@ def agent2_screen_candidates(state: PipelineState) -> dict:
         logger.info(f"  Screening {i+1}/{len(candidates)}: {name} ({ctype})")
 
         if ctype == "experienced":
-            result = screen_experienced(profile, jd_requirements)
+            result = await asyncio.to_thread(screen_experienced, profile, jd_requirements)
         else:
-            result = screen_fresher(profile, jd_requirements)
+            result = await asyncio.to_thread(screen_fresher, profile, jd_requirements)
 
         entry["screening_result"] = result
         verdict = result.get("verdict", "")
@@ -96,8 +95,7 @@ def agent2_screen_candidates(state: PipelineState) -> dict:
     }
 
 
-def agent2_rank_candidates(state: PipelineState) -> dict:
-    """Rank into Tier A (repo-backed) above Tier B (no repo)."""
+async def agent2_rank_candidates(state: PipelineState) -> dict:
     candidates = state.get("candidates", [])
     tech_stack = state.get("tech_stack_profile", {})
 

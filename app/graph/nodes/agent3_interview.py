@@ -1,7 +1,6 @@
 """LangGraph nodes for Agent 3 — AI Avatar Interviewer.
 
-send_invites → generate_questions → run_avatar_interviews →
-evaluate_responses → send_notifications → aggregate_shortlist → [CP-3]
+All nodes are async and use asyncio.to_thread() for blocking calls.
 """
 
 import asyncio
@@ -17,8 +16,7 @@ from app.graph.state import PipelineState
 logger = logging.getLogger(__name__)
 
 
-def agent3_send_invites(state: PipelineState) -> dict:
-    """Send interview invites to ranked candidates."""
+async def agent3_send_invites(state: PipelineState) -> dict:
     ranked = state.get("ranked_candidates", [])
     if not ranked:
         return {"status": "no_candidates_to_interview",
@@ -27,7 +25,8 @@ def agent3_send_invites(state: PipelineState) -> dict:
 
     logger.info(f"[Agent 3 / SA-1] Sending invites to {len(ranked)} candidates")
 
-    invited = send_interview_invites(
+    invited = await asyncio.to_thread(
+        send_interview_invites,
         ranked_candidates=ranked,
         pipeline_id=state["pipeline_id"],
         role_title=state["role_title"],
@@ -36,7 +35,7 @@ def agent3_send_invites(state: PipelineState) -> dict:
     sent_count = sum(1 for i in invited if i.get("email_sent"))
 
     return {
-        "interview_results": invited,  # Store session IDs for tracking
+        "interview_results": invited,
         "status": "invites_sent",
         "audit_log": [{"agent": "agent_3", "action": "invites_sent",
             "explanation": f"Sent {sent_count} interview invites to shortlisted candidates.",
@@ -44,8 +43,7 @@ def agent3_send_invites(state: PipelineState) -> dict:
     }
 
 
-def agent3_generate_questions(state: PipelineState) -> dict:
-    """Generate tailored questions for each candidate."""
+async def agent3_generate_questions(state: PipelineState) -> dict:
     ranked = state.get("ranked_candidates", [])
     skills_matrix = state.get("skills_matrix", {})
     tech_stack = state.get("tech_stack_profile", {})
@@ -58,7 +56,8 @@ def agent3_generate_questions(state: PipelineState) -> dict:
         screening = candidate_entry.get("screening_result", {})
         repo = candidate_entry.get("repo_analysis")
 
-        questions = generate_interview_questions(
+        questions = await asyncio.to_thread(
+            generate_interview_questions,
             candidate=profile,
             screening_result=screening,
             skills_matrix=skills_matrix,
@@ -75,26 +74,17 @@ def agent3_generate_questions(state: PipelineState) -> dict:
         "interview_questions": all_questions,
         "status": "questions_generated",
         "audit_log": [{"agent": "agent_3", "action": "questions_generated",
-            "explanation": f"Generated tailored interview questions for {len(all_questions)} candidates. "
-                          f"Average {sum(q['questions'].get('total_questions', 0) for q in all_questions) // max(len(all_questions), 1)} questions each.",
+            "explanation": f"Generated tailored interview questions for {len(all_questions)} candidates.",
             "data": {"candidates": len(all_questions)}}],
     }
 
 
-def agent3_run_avatar_interviews(state: PipelineState) -> dict:
-    """Run avatar interviews via Clawvatar for each candidate.
-
-    Note: In production, interviews run asynchronously — candidates
-    click their invite link and interview at their own pace.
-    This node tracks completion status.
-    """
+async def agent3_run_avatar_interviews(state: PipelineState) -> dict:
     questions_map = {q["candidate_name"]: q["questions"] for q in state.get("interview_questions", [])}
     invites = state.get("interview_results", [])
 
     logger.info(f"[Agent 3 / SA-3] Avatar interviews: {len(invites)} sessions pending")
 
-    # In production, this node would poll for completed sessions.
-    # For Phase 3 MVP, we run interviews synchronously.
     results = []
     for invite in invites:
         name = invite.get("candidate_name", "unknown")
@@ -107,7 +97,6 @@ def agent3_run_avatar_interviews(state: PipelineState) -> dict:
                            "status": "no_questions", "total_score": 0})
             continue
 
-        # Create and run avatar session
         session = AvatarInterviewSession(
             session_id=session_id,
             candidate={"name": name, "email": invite.get("email")},
@@ -116,22 +105,14 @@ def agent3_run_avatar_interviews(state: PipelineState) -> dict:
         )
 
         try:
-            result = asyncio.get_event_loop().run_until_complete(session.run())
+            result = await session.run()
             result["email"] = invite.get("email")
             results.append(result)
-        except RuntimeError:
-            # Already in async context
-            import nest_asyncio
-            try:
-                nest_asyncio.apply()
-                result = asyncio.get_event_loop().run_until_complete(session.run())
-                result["email"] = invite.get("email")
-                results.append(result)
-            except Exception as e:
-                logger.warning(f"Avatar interview failed for {name}: {e}")
-                results.append({"candidate_name": name, "session_id": session_id,
-                               "status": "pending", "total_score": 0,
-                               "note": "Interview session created — awaiting candidate completion"})
+        except Exception as e:
+            logger.warning(f"Avatar interview failed for {name}: {e}")
+            results.append({"candidate_name": name, "session_id": session_id,
+                           "status": "pending", "total_score": 0,
+                           "note": "Interview session created — awaiting candidate completion"})
 
     completed = sum(1 for r in results if r.get("status") == "completed")
 
@@ -145,24 +126,15 @@ def agent3_run_avatar_interviews(state: PipelineState) -> dict:
     }
 
 
-def agent3_evaluate_responses(state: PipelineState) -> dict:
-    """Aggregate per-candidate interview evaluation."""
+async def agent3_evaluate_responses(state: PipelineState) -> dict:
     results = state.get("interview_results", [])
-
     evaluated = []
     for result in results:
         score = result.get("total_score", 0)
-        if score >= 50:
-            verdict = "shortlisted"
-        elif score >= 40:
-            verdict = "flagged"
-        else:
-            verdict = "not_shortlisted"
-
+        verdict = "shortlisted" if score >= 50 else "flagged" if score >= 40 else "not_shortlisted"
         evaluated.append({**result, "interview_verdict": verdict})
 
     shortlisted = sum(1 for e in evaluated if e.get("interview_verdict") == "shortlisted")
-
     return {
         "interview_results": evaluated,
         "status": "interviews_evaluated",
@@ -172,12 +144,9 @@ def agent3_evaluate_responses(state: PipelineState) -> dict:
     }
 
 
-def agent3_send_notifications(state: PipelineState) -> dict:
-    """Send shortlist/rejection emails."""
+async def agent3_send_notifications(state: PipelineState) -> dict:
     results = state.get("interview_results", [])
-
-    notif = send_shortlist_notifications(results, state["role_title"])
-
+    notif = await asyncio.to_thread(send_shortlist_notifications, results, state["role_title"])
     return {
         "audit_log": [{"agent": "agent_3", "action": "notifications_sent",
             "explanation": f"Sent notifications: {len(notif['shortlisted'])} shortlisted, "
@@ -186,13 +155,10 @@ def agent3_send_notifications(state: PipelineState) -> dict:
     }
 
 
-def agent3_aggregate_shortlist(state: PipelineState) -> dict:
-    """Build final composite shortlist: 0.4 * screening + 0.6 * interview."""
+async def agent3_aggregate_shortlist(state: PipelineState) -> dict:
     ranked = state.get("ranked_candidates", [])
     interview_results = state.get("interview_results", [])
-
     shortlist = aggregate_shortlist(ranked, interview_results)
-
     return {
         "final_shortlist": shortlist,
         "status": "shortlist_ready",
