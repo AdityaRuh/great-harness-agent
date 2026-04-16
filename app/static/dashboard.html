@@ -202,7 +202,7 @@ async function renderOverview(m){
 async function renderPipeline(m){
   var d=await api('/pipelines/'+SP);if(d?.error){m.innerHTML='<div style="color:var(--err);padding:40px">'+d.error+'</div>';return;}
   var hp=!!d.current_checkpoint;var s=d.status||'';
-  var a1ok=['jd_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
+  var a1ok=['jd_pending_approval','jd_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a2ok=['ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
 
@@ -222,7 +222,7 @@ async function renderPipeline(m){
   // === TIMELINE ===
   // Agent 1 — Purple
   h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot" style="background:var(--a1bg);color:var(--a1t)">A1</div><div class="tl-line" style="background:var(--a1)"></div></div>';
-  h+='<div class="tl-card" style="background:var(--a1bg);border-color:var(--a1b)"><div class="flex jcb aic"><h4 style="color:var(--a1t)">'+(a1ok?'JD generated and approved':'Generating JD...')+'</h4><span class="bdg b-a1">'+(a1ok?'Completed':'In progress')+'</span></div>';
+  h+='<div class="tl-card" style="background:var(--a1bg);border-color:var(--a1b)"><div class="flex jcb aic"><h4 style="color:var(--a1t)">'+(s==='jd_pending_approval'?'JD generated — awaiting approval':a1ok?'JD generated and approved':'Generating JD...')+'</h4><span class="bdg b-a1">'+(s==='jd_pending_approval'?'Awaiting approval':a1ok?'Completed':'In progress')+'</span></div>';
   if(d.jd_draft)h+='<p style="color:var(--a1t);opacity:.7">Analyzed knowledgebase, mapped '+(d.skills_matrix?.must_have?.length||0)+' must-have skills, drafted JD.</p>';
   if(d.jd_published_url)h+='<p style="margin-top:6px"><a href="'+d.jd_published_url+'" target="_blank" style="color:var(--a1);font-size:12px;font-weight:500">View published JD →</a></p>';
   h+='</div></div>';
