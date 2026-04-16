@@ -2,182 +2,168 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Great Harness Agent — HR Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Great Harness — AI Hiring Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0B0D11;--card:#12151B;--hover:#181C24;--input:#0F1117;--border:#1E2230;--accent:#6C5CE7;--ag:rgba(108,92,231,0.15);--al:#A29BFE;--ok:#00D68F;--okb:rgba(0,214,143,0.08);--warn:#FFB344;--warnb:rgba(255,179,68,0.08);--err:#FF6B6B;--errb:rgba(255,107,107,0.08);--t:#E8ECF4;--tm:#6B7394;--td:#3D4460;--f:'DM Sans',sans-serif;--fm:'JetBrains Mono',monospace;--r:12px;--rs:8px}
-body{font-family:var(--f);background:var(--bg);color:var(--t);height:100vh;display:flex;overflow:hidden}
-.sb{width:240px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
-.logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.logo-i{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--al));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
-.logo h3{font-size:14px;font-weight:700}.logo small{font-size:10px;color:var(--tm);letter-spacing:.5px;text-transform:uppercase;display:block}
-nav{padding:12px 8px;flex:1}.ni{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--rs);cursor:pointer;margin-bottom:2px;color:var(--tm);font-size:13px;transition:all .15s}.ni:hover{background:var(--hover);color:var(--t)}.ni.on{background:var(--ag);color:var(--al);font-weight:600}
-.sf{padding:16px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--td)}
-main{flex:1;overflow:auto;padding:32px}
-h2{font-size:22px;font-weight:700;margin-bottom:8px}.sub{font-size:14px;color:var(--tm);margin-bottom:32px}
-.c{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px}.c.glow{box-shadow:0 0 40px var(--ag)}
-.g{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,1fr)}.ga{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
-.b{display:inline-flex;align-items:center;padding:2px 10px;font-size:11px;font-weight:600;border-radius:20px;font-family:var(--fm);text-transform:uppercase}
-.b-a{background:var(--ag);color:var(--al);border:1px solid rgba(108,92,231,.3)}.b-ok{background:var(--okb);color:var(--ok);border:1px solid rgba(0,214,143,.3)}.b-w{background:var(--warnb);color:var(--warn);border:1px solid rgba(255,179,68,.3)}.b-e{background:var(--errb);color:var(--err);border:1px solid rgba(255,107,107,.3)}.b-d{background:rgba(59,68,96,.15);color:var(--tm);border:1px solid rgba(59,68,96,.3)}.b-i{background:rgba(78,205,196,.08);color:#4ECDC4;border:1px solid rgba(78,205,196,.3)}
-label{display:block;font-size:12px;color:var(--tm);margin-bottom:6px;font-weight:500}
-input,textarea{width:100%;padding:10px 14px;font-size:14px;font-family:var(--f);background:var(--input);color:var(--t);border:1px solid var(--border);border-radius:var(--rs);outline:none}input:focus,textarea:focus{border-color:#6C5CE7}textarea{resize:vertical}
-.btn{padding:8px 20px;font-size:13px;font-weight:600;font-family:var(--f);border:none;border-radius:var(--rs);cursor:pointer;transition:all .2s}.btn:active{transform:scale(.98)}.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#7D6FF0}.btn-g{background:transparent;color:var(--tm);border:1px solid var(--border)}.btn-g:hover{background:var(--hover)}.btn-ok{background:var(--ok);color:#0B0D11}.btn-e{background:transparent;color:var(--err);border:1px solid rgba(255,107,107,.3)}.btn-lg{padding:12px 28px;font-size:15px}.btn:disabled{opacity:.4;cursor:default}
-.sv{font-size:32px;font-weight:700;font-family:var(--fm);text-align:center}.sl{font-size:12px;color:var(--tm);margin-top:4px;text-align:center;text-transform:uppercase}
-.empty{text-align:center;padding:60px 20px}.empty b{font-size:48px;display:block;margin-bottom:16px;opacity:.3}.empty h3{font-size:18px;color:var(--tm)}.empty p{font-size:14px;color:var(--td);margin-top:8px}
-.tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border)}.tab{padding:10px 18px;font-size:13px;cursor:pointer;color:var(--tm);border-bottom:2px solid transparent}.tab.on{color:var(--al);font-weight:600;border-bottom-color:var(--accent)}.tab:hover{color:var(--t)}
-.uz{border:2px dashed var(--border);border-radius:var(--r);padding:40px;text-align:center;cursor:pointer}.uz:hover{border-color:var(--accent)}
-.pulse{width:10px;height:10px;border-radius:50%;background:var(--warn);animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.jd{white-space:pre-wrap;font-size:13px;color:var(--tm);line-height:1.7;max-height:600px;overflow:auto}
-.mono{font-family:var(--fm)}.flex{display:flex}.gap{gap:8px}.aic{align-items:center}.jcb{justify-content:space-between}.w{width:100%}.mt{margin-top:16px}.mb{margin-bottom:16px}
+:root{
+  --bg:#0B0D14;--bg2:#10131B;--bg3:#151923;--bg4:#1A1F2E;
+  --t1:#F0F2F8;--t2:#9CA3BC;--t3:#5A6180;--t4:#3D4460;
+  --border:#1E2338;--border2:#262C44;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --a1:#AFA9EC;--a1bg:#1C1935;--a1t:#C8C3F5;--a1s:rgba(108,92,231,0.15);
+  --a2:#5DCAA5;--a2bg:#0E1F1A;--a2t:#8EDDC3;--a2s:rgba(29,158,117,0.15);
+  --a3:#F0997B;--a3bg:#231510;--a3t:#F5B8A1;--a3s:rgba(216,90,48,0.15);
+  --a4:#85B7EB;--a4bg:#0F1926;--a4t:#A8CFF0;--a4s:rgba(55,138,221,0.15);
+  --ok:#4ade80;--okbg:rgba(74,222,128,0.08);--oks:rgba(74,222,128,0.25);
+  --warn:#fbbf24;--warnbg:rgba(251,191,36,0.08);--warns:rgba(251,191,36,0.25);
+  --err:#f87171;--errbg:rgba(248,113,113,0.08);--errs:rgba(248,113,113,0.25);
+  --accent:#7C6EF0;--accentbg:rgba(124,110,240,0.1);--accents:rgba(124,110,240,0.3);
+  --r:12px;--rs:8px
+}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);height:100vh;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#fff}
+input,textarea,select{font-family:var(--font)}
+.sb{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px 18px;display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7C6EF0,#C084FC);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
+.logo h3{font-size:15px;font-weight:600;letter-spacing:-.3px}
+.logo small{display:block;font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+nav{padding:8px;flex:1}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:var(--rs);cursor:pointer;color:var(--t3);font-size:13px;font-weight:400;transition:all .15s;margin-bottom:1px;border:1px solid transparent}
+.ni:hover{background:var(--bg3);color:var(--t2)}
+.ni.on{background:var(--accentbg);color:var(--a1);font-weight:500;border-color:var(--accents)}
+.ni .ic{width:20px;text-align:center;font-size:14px}
+.agents{display:flex;gap:0;padding:16px 18px;border-top:1px solid var(--border)}
+.ag{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:-6px;border:2px solid var(--bg2);position:relative;cursor:pointer;transition:transform .15s}
+.ag:hover{transform:scale(1.15);z-index:10}
+.ag.live::after{content:'';position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--ok);border:2px solid var(--bg2)}
+.sb-foot{padding:14px 18px;border-top:1px solid var(--border);font-size:10px;color:var(--t4);display:flex;align-items:center;gap:6px}
+.sb-foot .d{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+main{flex:1;overflow:auto;padding:0}
+.ph{padding:24px 32px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.ph h2{font-size:22px;font-weight:600;letter-spacing:-.5px}
+.ph .sub{font-size:13px;color:var(--t3);margin-top:4px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 32px}
+.met{background:var(--bg3);border-radius:var(--r);padding:16px 18px}
+.met .l{font-size:12px;color:var(--t3)}
+.met .v{font-size:28px;font-weight:600;font-family:var(--mono);margin-top:4px;letter-spacing:-1px}
+.btn{padding:7px 16px;font-size:12px;font-weight:500;font-family:var(--font);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .15s;background:transparent;color:var(--t2)}
+.btn:hover{background:var(--bg4);color:var(--t1)}.btn:active{transform:scale(.97)}
+.btn-p{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-p:hover{background:#8B7FF5}
+.btn-ok{background:var(--okbg);color:var(--ok);border-color:var(--oks)}.btn-ok:hover{background:rgba(74,222,128,.18)}
+.btn-er{background:transparent;color:var(--err);border-color:var(--errs)}.btn-er:hover{background:var(--errbg)}
+.btn:disabled{opacity:.3;cursor:default;transform:none}
+label{display:block;font-size:11px;color:var(--t3);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+input,textarea{width:100%;padding:9px 13px;font-size:13px;background:var(--bg);color:var(--t1);border:1px solid var(--border);border-radius:var(--rs);outline:none;transition:border-color .15s}
+input:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical}
+.bdg{display:inline-flex;align-items:center;padding:2px 10px;font-size:10px;font-weight:600;border-radius:20px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.b-ok{background:var(--okbg);color:var(--ok);border:1px solid var(--oks)}
+.b-w{background:var(--warnbg);color:var(--warn);border:1px solid var(--warns)}
+.b-e{background:var(--errbg);color:var(--err);border:1px solid var(--errs)}
+.b-a1{background:var(--a1s);color:var(--a1);border:1px solid rgba(108,92,231,.3)}
+.b-a2{background:var(--a2s);color:var(--a2);border:1px solid rgba(29,158,117,.3)}
+.b-a3{background:var(--a3s);color:var(--a3);border:1px solid rgba(216,90,48,.3)}
+.b-a4{background:var(--a4s);color:var(--a4);border:1px solid rgba(55,138,221,.3)}
+.tl{padding:0 32px 32px}
+.ti{display:flex;gap:16px;margin-bottom:4px}
+.tl-l{width:40px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+.tl-d{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:2px solid;flex-shrink:0;position:relative}
+.tl-d.live::after{content:'';position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--ok);border:2px solid var(--bg)}
+.tl-ln{width:2px;flex:1;border-radius:1px;min-height:8px}
+.tl-c{flex:1;border-radius:var(--r);padding:16px 20px;border:1px solid;margin-bottom:4px}
+.tl-c.fut{opacity:.35}
+.tl-c h4{font-size:14px;font-weight:500;margin-bottom:4px}
+.tl-c p{font-size:12px;line-height:1.5}
+.cr{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;transition:all .15s}
+.cr:hover{border-color:var(--border2)}
+.cav{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.ci{flex:1}.cn{font-size:13px;font-weight:500}.cm{font-size:11px;color:var(--t3);margin-top:2px}
+.cs{text-align:right;margin-right:8px}.cs .n{font-size:22px;font-weight:600;font-family:var(--mono);letter-spacing:-1px}.cs .lb{font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px}
+.cp{background:var(--warnbg);border:1px solid var(--warns);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:14px;margin:0 32px 16px}
+.cp .pu{width:10px;height:10px;border-radius:50%;background:var(--warn);animation:pu 2s infinite;flex-shrink:0}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.cp .inf{flex:1}.cp .inf h4{font-size:13px;font-weight:500;color:var(--warn)}.cp .inf p{font-size:11px;color:var(--t3);margin-top:3px}
+.tabs{display:flex;gap:2px;margin:16px 32px;background:var(--bg3);border-radius:var(--rs);padding:3px}
+.tab{padding:7px 16px;font-size:12px;cursor:pointer;color:var(--t3);border-radius:6px;font-weight:400;transition:all .15s}
+.tab.on{background:var(--bg);color:var(--t1);font-weight:500;border:1px solid var(--border)}
+.tab:hover:not(.on){color:var(--t2)}
+.uz{border:2px dashed var(--border);border-radius:var(--r);padding:40px;text-align:center;cursor:pointer;transition:border-color .2s}.uz:hover{border-color:var(--accent)}
+.empty{text-align:center;padding:60px 20px}.empty .ei{font-size:48px;margin-bottom:16px;opacity:.2}.empty h3{font-size:16px;color:var(--t3);font-weight:500}.empty p{font-size:13px;color:var(--t4);margin-top:6px}
+.ct{padding:20px 32px 32px}
+.flex{display:flex}.gap{gap:8px}.aic{align-items:center}.jcb{justify-content:space-between}.w100{width:100%}.mt{margin-top:12px}.mb{margin-bottom:12px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fi{animation:fi .3s ease}
 </style>
 </head>
 <body>
-<div class="sb"><div class="logo"><div class="logo-i">G</div><div><h3>Great Harness</h3><small>AI Hiring Agent</small></div></div><nav id="nav"></nav><div class="sf">v1.0 · 4 Agents · 14 Sub-agents</div></div>
+<div class="sb">
+  <div class="logo"><div class="logo-icon">G</div><div><h3>Great Harness</h3><small>AI Hiring Agent</small></div></div>
+  <nav id="nav"></nav>
+  <div class="agents"><div class="ag live" style="background:var(--a1s);color:var(--a1);border-color:var(--a1)" title="Agent 1: JD Manager">A1</div><div class="ag live" style="background:var(--a2s);color:var(--a2);border-color:var(--a2)" title="Agent 2: Screener">A2</div><div class="ag" style="background:var(--a3s);color:var(--a3);border-color:var(--a3)" title="Agent 3: Interviewer">A3</div><div class="ag" style="background:var(--a4s);color:var(--a4);border-color:var(--a4)" title="Agent 4: Offer">A4</div></div>
+  <div class="sb-foot"><div class="d"></div>System running · v1.0</div>
+</div>
 <main id="main"></main>
 <script>
-const A='/api/v1';let V='dashboard',SP=null,P=[];
-const NAV=[{id:'dashboard',i:'◈',l:'Dashboard'},{id:'new',i:'✦',l:'New Pipeline'},{id:'candidates',i:'◎',l:'Candidates'},{id:'interviews',i:'▶',l:'Interviews'},{id:'audit',i:'☰',l:'Audit Log'}];
-async function api(p,o={}){try{const r=await fetch(A+p,{headers:{'Content-Type':'application/json',...(o.headers||{})},...o});return await r.json();}catch(e){return{error:e.message};}}
+var A='/api/v1',V='dashboard',SP=null,P=[];
+var NAV=[{id:'dashboard',i:'◈',l:'Overview'},{id:'new',i:'✦',l:'New Pipeline'},{id:'candidates',i:'◎',l:'Candidates'},{id:'interviews',i:'▷',l:'Interviews'},{id:'audit',i:'☰',l:'Audit Log'}];
+async function api(p,o){o=o||{};try{var r=await fetch(A+p,{headers:{'Content-Type':'application/json'},method:o.method||'GET',body:o.body});return await r.json();}catch(e){return{error:e.message};}}
 function go(v,pid){if(v==='pipeline'&&pid){SP=pid;V='pipeline';}else{V=v;SP=null;}rn();rc();}
-function sb(s){const m={draft:['Draft','d'],started:['Started','i'],analyzing:['Analyzing','i'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],jd_revision_needed:['Revision','e'],screening_complete:['Screened','i'],ranking_complete:['Ranked','w'],shortlist_ready:['Shortlist','w'],completed:['Complete','ok']};const[l,c]=m[s]||[s||'Unknown','d'];return`<span class="b b-${c}">${l}</span>`;}
-function rn(){document.getElementById('nav').innerHTML=NAV.map(n=>`<div class="ni ${V===n.id?'on':''}" onclick="go('${n.id}')"><span style="font-size:16px;width:20px;text-align:center">${n.i}</span>${n.l}</div>`).join('');}
+function sb(s){var m={draft:['Draft','a1'],started:['Started','a1'],analyzing:['Analyzing','a1'],jd_pending_approval:['JD Review','w'],jd_approved:['Approved','ok'],jd_published:['Published','ok'],jd_revision_needed:['Revision','e'],screening_complete:['Screened','a2'],ranking_complete:['Ranked','a2'],shortlist_ready:['Shortlist','w'],invites_sent:['Invites Sent','a3'],questions_generated:['Questions Ready','a3'],completed:['Complete','ok']};var x=m[s]||[s||'Unknown','a1'];return '<span class="bdg b-'+x[1]+'">'+x[0]+'</span>';}
+function rn(){document.getElementById('nav').innerHTML=NAV.map(function(n){var on=V===n.id||(V==='pipeline'&&n.id==='dashboard');return '<div class="ni '+(on?'on':'')+'" onclick="go(\''+n.id+'\')"><span class="ic">'+n.i+'</span>'+n.l+'</div>';}).join('');}
 async function lp(){P=await api('/pipelines');if(!Array.isArray(P))P=[];rn();}
-async function rc(){const m=document.getElementById('main');if(V==='dashboard')await rd(m);else if(V==='new')rnp(m);else if(V==='pipeline'&&SP)await rpd(m);else if(V==='candidates')await rca(m);else if(V==='interviews')await rint(m);else m.innerHTML=`<div class="empty"><b>☰</b><h3>Audit Log</h3><p>Select a pipeline from dashboard</p></div>`;}
-async function rd(m){await lp();if(!P.length){m.innerHTML=`<div class="empty"><b>◈</b><h3>No pipelines yet</h3><p>Create your first hiring pipeline</p><button class="btn btn-p btn-lg mt" onclick="go('new')">✦ Create Pipeline</button></div>`;return;}
-m.innerHTML=`<div class="flex jcb aic mb"><h2>Active Pipelines</h2><button class="btn btn-g" onclick="rc()">↻ Refresh</button></div><div class="g ga">${P.map(p=>`<div class="c" style="cursor:pointer" onclick="go('pipeline','${p.id}')"><div class="flex jcb aic mb"><div style="font-size:16px;font-weight:600">${p.role_title||'Untitled'}</div>${sb(p.status)}</div><div style="font-size:12px;color:var(--tm)" class="mono">${(p.id||'').slice(0,12)}...</div></div>`).join('')}</div>`;}
-function rnp(m){m.innerHTML=`<h2>Start New Pipeline</h2><p class="sub">Agent 1 will analyze your knowledgebase, map skills, and generate a JD.</p><div class="c glow" style="max-width:560px"><div class="mb"><label>Role Title</label><input id="r" placeholder="e.g. Frontend Developer"></div><div class="mb"><label>Experience Level</label><input id="e" placeholder="e.g. 2 years"></div><div class="mb"><label>Department</label><input id="d" value="Engineering"></div><div class="mb"><label>Candidate Type</label><div class="flex gap" id="ct"><button class="btn btn-p" data-v="auto">Auto-detect</button><button class="btn btn-g" data-v="fresher">Fresher</button><button class="btn btn-g" data-v="experienced">Experienced</button></div></div><button class="btn btn-p btn-lg w" id="go" onclick="cp()">✦ Start Pipeline</button><div id="res" class="mt"></div></div>`;let t='auto';document.getElementById('ct').onclick=e=>{if(!e.target.dataset.v)return;t=e.target.dataset.v;document.querySelectorAll('#ct .btn').forEach(b=>b.className=b.dataset.v===t?'btn btn-p':'btn btn-g');};window._t=()=>t;}
-async function cp(){const r=document.getElementById('r').value,e=document.getElementById('e').value,d=document.getElementById('d').value,t=window._t();if(!r||!e)return;const b=document.getElementById('go');b.disabled=true;b.textContent='Agent 1 analyzing...';const res=await api('/pipelines',{method:'POST',body:JSON.stringify({role_title:r,experience_level:e,department:d,candidate_type:t})});b.disabled=false;b.textContent='✦ Start Pipeline';const o=document.getElementById('res');if(res?.error)o.innerHTML=`<div class="c" style="border-color:rgba(255,107,107,.3)"><div style="color:var(--err);font-size:13px">${JSON.stringify(res.error)}</div></div>`;else if(res?.id){await lp();o.innerHTML=`<div class="c" style="border-color:rgba(0,214,143,.3)"><div style="font-size:14px;font-weight:600;color:var(--ok);margin-bottom:8px">Pipeline Created!</div><div style="font-size:12px;color:var(--tm)" class="mono mb">ID: ${res.id}</div>${sb(res.status)}${res.jd_draft?`<details class="mt"><summary style="font-size:13px;color:var(--al);cursor:pointer">View Generated JD</summary><div class="jd mt">${res.jd_draft}</div></details>`:''}<button class="btn btn-p mt" onclick="go('pipeline','${res.id}')">View Pipeline →</button></div>`;}}
-async function rpd(m){const d=await api(`/pipelines/${SP}`);if(d?.error){m.innerHTML=`<div style="color:var(--err);padding:40px">${d.error}</div>`;return;}const hp=!!d.current_checkpoint;let tab='overview';m.innerHTML=`<div class="flex jcb aic mb"><div><h2>${d.config?.role_title||'Pipeline'}</h2><div style="font-size:12px;color:var(--tm)" class="mono mt">${SP.slice(0,20)}...</div></div><div class="flex gap aic">${sb(d.status)}<button class="btn btn-g" onclick="rc()">↻</button></div></div><div class="tabs" id="tabs"><div class="tab on" data-t="overview">Overview</div><div class="tab" data-t="jd">JD</div><div class="tab" data-t="candidates">Candidates</div><div class="tab" data-t="audit">Audit</div></div><div id="tc"></div>`;document.getElementById('tabs').onclick=e=>{if(!e.target.dataset.t)return;tab=e.target.dataset.t;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===tab));rt();};function rt(){const tc=document.getElementById('tc');if(tab==='overview'){tc.innerHTML=`<div class="g g4 mb"><div class="c"><div class="sv" style="color:var(--al)">${(d.status||'').split('_').pop()}</div><div class="sl">Status</div></div><div class="c"><div class="sv" style="color:${hp?'var(--warn)':'var(--td)'}">${hp?'Active':'None'}</div><div class="sl">Checkpoint</div></div><div class="c"><div class="sv">${d.skills_matrix?.must_have?.length||0}</div><div class="sl">Must-have</div></div><div class="c"><div class="sv">${d.audit_log?.length||0}</div><div class="sl">Audit</div></div></div>${hp?`<div class="c glow" style="border-color:rgba(255,179,68,.3)"><div class="flex aic gap mb"><div class="pulse"></div><div style="font-size:15px;font-weight:600;color:var(--warn)">Checkpoint: ${d.current_checkpoint?.replace(/_/g,' ')}</div></div><div class="flex gap mb"><button class="btn btn-ok" onclick="acp('approve')">✓ Approve</button><button class="btn btn-e" onclick="acp('reject')">✕ Request Changes</button></div><label>Feedback (for rejection)</label><textarea id="fb" rows="3" placeholder="What changes?"></textarea></div>`:''}${d.jd_published_url?`<div class="c"><span style="font-size:13px;color:var(--tm)">Published: </span><a href="${d.jd_published_url}" target="_blank" style="color:var(--al)">${d.jd_published_url}</a></div>`:''}<div class="c"><div style="font-size:15px;font-weight:600;margin-bottom:12px">Upload Resumes</div><div class="uz" onclick="document.getElementById('fu').click()"><div style="font-size:32px;margin-bottom:8px;opacity:.3">📄</div><div style="font-size:14px;color:var(--tm)">Drop PDF/DOCX here or click to upload</div></div><input type="file" id="fu" multiple accept=".pdf,.docx" style="display:none" onchange="ul(this.files)"></div>`;}else if(tab==='jd'){tc.innerHTML=d.jd_draft?`<div class="c"><div style="font-size:15px;font-weight:600;margin-bottom:16px">Generated Job Description</div><div class="jd">${d.jd_draft}</div></div>`:`<div class="empty"><b>📝</b><h3>JD not yet generated</h3></div>`;}else if(tab==='candidates'){rcl(tc);}else if(tab==='audit'){tc.innerHTML=(d.audit_log||[]).length?d.audit_log.slice().reverse().map(e=>`<div class="c" style="padding:16px"><div class="flex jcb aic mb"><span class="b ${e.agent==='agent_1'?'b-a':e.agent==='agent_2'?'b-i':'b-d'}">${e.agent}</span><span style="font-size:11px;color:var(--td)" class="mono">${e.action}</span></div><div style="font-size:13px;color:var(--tm);line-height:1.5">${(e.explanation||'').slice(0,300)}</div></div>`).join(''):`<div class="empty"><b>☰</b><h3>No audit entries</h3></div>`;}}rt();}
-async function acp(dec){const fb=document.getElementById('fb')?.value;if(dec==='reject'&&!fb){alert('Provide feedback');return;}await api(`/pipelines/${SP}/approve`,{method:'POST',body:JSON.stringify({checkpoint:'jd_approval',decision:dec,feedback:dec==='reject'?fb:undefined})});rc();}
-async function ul(f){if(!f.length)return;const fd=new FormData();for(const x of f)fd.append('files',x);await fetch(`${A}/pipelines/${SP}/upload`,{method:'POST',body:fd});rc();}
-async function rcl(tc){const r=await api(`/pipelines/${SP}/candidates`);if(!r?.candidates?.length){tc.innerHTML=`<div class="empty"><b>◎</b><h3>No candidates</h3><p>Upload resumes or candidates apply via careers page</p></div>`;return;}tc.innerHTML=r.candidates.map((c,idx)=>{const col=c.screening_verdict?.includes('Shortlisted')?'ok':c.screening_verdict?.includes('Flagged')?'w':'e';const esc=c.escalated?'<span style="font-size:10px;color:var(--warn);margin-left:4px">⚠ ESCALATED</span>':'';return`<div class="c" style="padding:16px" id="cand_${idx}"><div class="flex jcb aic"><div><div style="font-size:14px;font-weight:600">${c.name}${esc}</div><div style="font-size:11px;color:var(--td)">${c.candidate_type||''} · ${c.email||''}</div></div><div class="flex aic gap">${c.screening_score!=null?`<div style="font-size:20px;font-weight:700;font-family:var(--fm);color:${c.screening_score>=60?'var(--ok)':c.screening_score>=45?'var(--warn)':'var(--err)'}">${c.screening_score}</div>`:''}${c.screening_verdict?`<span class="b b-${col}">${c.screening_verdict}</span>`:''}</div></div>${c.decision_note?`<div style="font-size:12px;color:var(--tm);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5">${c.decision_note}</div>`:''}${c.red_flags?.length?`<div style="font-size:11px;color:var(--err);margin-top:8px">Red flags: ${c.red_flags.join(', ')}</div>`:''}${(c.screening_verdict?.includes('Flagged')||c.escalated)?`<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px"><div style="font-size:12px;font-weight:600;color:var(--warn);margin-bottom:8px">⚠ Needs HR Review</div><textarea id="hr_note_${idx}" rows="2" placeholder="Your notes on this candidate..." style="margin-bottom:8px"></textarea><div class="flex gap"><button class="btn btn-ok" onclick="hrDecision(${idx},'${c.name}','${c.email||''}','approve')">✓ Approve for Interview</button><button class="btn btn-e" onclick="hrDecision(${idx},'${c.name}','${c.email||''}','reject')">✕ Reject</button></div></div>`:c.screening_verdict?.includes('Shortlisted')?`<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px"><div class="flex gap"><button class="btn btn-ok" onclick="hrDecision(${idx},'${c.name}','${c.email||''}','approve')">✓ Move to Interview</button><button class="btn btn-e" onclick="hrDecision(${idx},'${c.name}','${c.email||''}','reject')">✕ Reject</button><button class="btn btn-g" onclick="hrDecision(${idx},'${c.name}','${c.email||''}','hold')">⏸ Hold</button></div></div>`:''}</div>`;}).join('');}
-async function rca(m){await lp();if(!P.length){m.innerHTML=`<div class="empty"><b>◎</b><h3>No pipelines</h3></div>`;return;}m.innerHTML=`<h2 class="mb">All Candidates</h2>`;for(const p of P){const r=await api(`/pipelines/${p.id}/candidates`);if(r?.candidates?.length){m.innerHTML+=`<div style="font-size:15px;font-weight:600;color:var(--al);margin:16px 0 8px;cursor:pointer" onclick="go('pipeline','${p.id}')">${p.role_title} →</div>`;m.innerHTML+=r.candidates.map(c=>`<div class="c" style="padding:12px"><div class="flex jcb aic"><span>${c.name}</span><span class="b b-${c.screening_verdict?.includes('Shortlisted')?'ok':'d'}">${c.screening_verdict||'pending'}</span></div></div>`).join('');}}}
-
-async function rint(m){
-  var results=[],scheduled=[],approved=false;
-  try{results=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
-  try{scheduled=(await(await fetch('/api/v1/scheduled-interviews')).json()).interviews||[];}catch(e){}
-  try{var st=await(await fetch('/api/v1/interview/shortlist-status')).json();approved=st.approved_pipelines&&st.approved_pipelines.length>0;}catch(e){}
-  var h='<h2 class="mb">Interviews & Scheduling</h2>';
-  if(results.length){
-    h+='<div style="font-size:15px;font-weight:600;color:var(--al);margin-bottom:12px">AI Interview Results (80% Screening + 20% Interview)</div>';
-    for(var i=0;i<results.length;i++){var r=results[i];
-      var cs=r.composite_score||0,is2=r.interview_score||0,ss=r.screening_score||0;
-      var sl=cs>=50,col=sl?'ok':'e';
-      var isSch=scheduled.some(function(s){return s.candidate_name===r.candidate_name});
-      h+='<div class="c" style="padding:16px" id="iv_'+i+'">';
-      h+='<div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">'+r.candidate_name+'</div>';
-      h+='<div style="font-size:11px;color:var(--td)">Session: '+(r.session_id||'').slice(0,12)+'...</div></div>';
-      h+='<div class="flex aic gap"><div style="text-align:right"><div style="font-size:24px;font-weight:700;font-family:var(--fm);color:var(--'+col+')">'+cs+'</div>';
-      h+='<div style="font-size:9px;color:var(--td)">COMPOSITE</div></div>';
-      h+='<span class="b b-'+col+'">'+(sl?'SHORTLISTED':'NOT SHORTLISTED')+'</span></div></div>';
-      h+='<div class="flex gap mb" style="font-size:12px;color:var(--tm)">';
-      h+='<span>Screening: <strong style="color:var(--al)">'+ss+'</strong>/100 (80%)</span> · ';
-      h+='<span>Interview: <strong style="color:var(--al)">'+is2+'</strong>/100 (20%)</span> · ';
-      h+='<span>Verdict: <strong>'+r.verdict+'</strong></span></div>';
-      if(!isSch){h+='<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px"><div class="flex gap">';
-        h+='<button class="btn btn-ok" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivDecision(this.dataset.s,+this.dataset.i,\'qualify\')">✓ Qualify for Final Round</button>';
-        h+='<button class="btn btn-e" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivDecision(this.dataset.s,+this.dataset.i,\'reject\')">✕ Reject</button>';
-        h+='</div></div>';}
-      if(isSch){h+='<div style="font-size:12px;color:var(--ok);margin-top:8px">✓ Final interview scheduled</div>';}
-      h+='</div>';}
-    if(!approved){h+='<div class="c glow" style="border-color:rgba(255,179,68,.3);margin-top:16px">';
-      h+='<div class="flex aic gap mb"><div class="pulse"></div><div style="font-size:15px;font-weight:600;color:var(--warn)">Checkpoint 3: Approve Interview Shortlist</div></div>';
-      h+='<p style="font-size:13px;color:var(--tm);margin-bottom:12px">Review results above. Qualify or reject candidates, then approve to enable scheduling.</p>';
-      h+='<button class="btn btn-ok" onclick="approveShortlist()">✓ Approve Shortlist & Enable Scheduling</button></div>';}
-  }
-  if(approved){var qualified=results.filter(function(r){return(r.composite_score||0)>=50||r.hr_decision==='qualify'});
-    if(qualified.length&&!scheduled.length){
-      h+='<div style="font-size:15px;font-weight:600;color:var(--ok);margin:24px 0 12px">✓ Shortlist Approved — Schedule Final Interviews</div>';
-      for(var j=0;j<qualified.length;j++){var q=qualified[j];var sid=q.session_id;
-        h+='<div class="c" style="padding:16px"><div style="font-size:14px;font-weight:600;margin-bottom:12px">'+q.candidate_name+' <span class="b b-ok">QUALIFIED</span></div>';
-        h+='<div class="flex gap mb"><div style="flex:1"><label>Date</label><input type="date" id="dt_'+sid+'" value="2026-04-20"></div>';
-        h+='<div style="flex:1"><label>Time</label><input type="time" id="tm_'+sid+'" value="15:00"></div>';
-        h+='<div style="flex:1"><label>Duration</label><input type="number" id="dur_'+sid+'" value="60"></div></div>';
-        h+='<div id="interviewers_'+sid+'"><div class="flex gap mb">';
-        h+='<div style="flex:2"><label>Interviewer</label><input id="in_'+sid+'_0" placeholder="Name"></div>';
-        h+='<div style="flex:2"><label>Email</label><input id="ie_'+sid+'_0" placeholder="email@ruh.ai"></div>';
-        h+='<div style="flex:1"><label>Role</label><input id="ir_'+sid+'_0" placeholder="CTO"></div></div></div>';
-        h+='<div class="flex gap"><button class="btn btn-g" data-sid="'+sid+'" onclick="addInterviewer(this.dataset.sid)">+ Add Interviewer</button>';
-        h+='<button class="btn btn-p" data-sid="'+sid+'" data-nm="'+q.candidate_name+'" data-em="'+(q.candidate_email||'')+'" onclick="scheduleInterview(this.dataset.sid,this.dataset.nm,this.dataset.em)">Schedule & Send Invites</button></div></div>';}}}
-  if(scheduled.length){h+='<div style="font-size:15px;font-weight:600;color:var(--warn);margin:24px 0 12px">Scheduled Final Interviews</div>';
-    for(var k=0;k<scheduled.length;k++){var s=scheduled[k];
-      h+='<div class="c" style="padding:16px"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:600">'+s.candidate_name+'</div>';
-      h+='<div style="font-size:12px;color:var(--tm)">'+s.date+' at '+s.time+'</div></div><span class="b b-w">'+s.status+'</span></div>';
-      h+='<div style="font-size:12px;color:var(--tm);margin-bottom:8px">Meet: <a href="'+(s.meet_link||'')+'" target="_blank" style="color:var(--al)">'+(s.meet_link||'pending')+'</a></div>';
-      h+='<div class="flex gap"><button class="btn btn-ok" data-n="'+s.candidate_name+'" data-e="'+(s.candidate_email||'')+'" onclick="finalDecision(this.dataset.n,this.dataset.e,\'selected\')">✓ Selected — Send Offer</button>';
-      h+='<button class="btn btn-e" data-n="'+s.candidate_name+'" data-e="'+(s.candidate_email||'')+'" onclick="finalDecision(this.dataset.n,this.dataset.e,\'rejected\')">✕ Not Selected</button></div></div>';}}
-  if(!results.length&&!scheduled.length){h+='<div class="empty"><b>▶</b><h3>No interviews yet</h3><p>Complete the AI screening round first</p></div>';}
-  m.innerHTML=h;}
-
-function ivDecision(sid,idx,decision){
-  if(decision==='reject'&&!confirm('Reject? Rejection email will be sent.'))return;
-  fetch('/api/v1/interview/hr-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,decision:decision})}).then(function(r){return r.json()}).then(function(){
-    var card=document.getElementById('iv_'+idx);
-    if(decision==='qualify'){card.style.borderColor='rgba(0,214,143,.5)';card.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:12px;font-weight:600;margin-top:8px">✓ Qualified by HR</div>');}
-    else{card.style.borderColor='rgba(255,107,107,.3)';card.style.opacity='.5';card.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:12px;font-weight:600;margin-top:8px">✕ Rejected — email sent</div>');}
-    card.querySelectorAll('.btn-ok,.btn-e').forEach(function(b){b.disabled=true;b.style.opacity='.3';});});}
-
-async function approveShortlist(){await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:'approved'})});alert('Shortlist approved! Scheduling now available.');rint(document.getElementById('main'));}
-
-var _ic={};
-function addInterviewer(sid){
-  _ic[sid]=(_ic[sid]||0)+1;var n=_ic[sid];
-  var div=document.getElementById('interviewers_'+sid);
-  div.insertAdjacentHTML('beforeend','<div class="flex gap mb"><div style="flex:2"><input id="in_'+sid+'_'+n+'" placeholder="Name"></div><div style="flex:2"><input id="ie_'+sid+'_'+n+'" placeholder="Email"></div><div style="flex:1"><input id="ir_'+sid+'_'+n+'" placeholder="Role"></div></div>');
-}
-
-async function scheduleInterview(sid,name,email){
-  var dt=document.getElementById('dt_'+sid)?.value;
-  var tm=document.getElementById('tm_'+sid)?.value;
-  var dur=document.getElementById('dur_'+sid)?.value||60;
-  var interviewers=[];
-  for(var i=0;i<=(_ic[sid]||0);i++){
-    var n=document.getElementById('in_'+sid+'_'+i)?.value;
-    var e=document.getElementById('ie_'+sid+'_'+i)?.value;
-    var r=document.getElementById('ir_'+sid+'_'+i)?.value;
-    if(n&&e)interviewers.push({name:n,email:e,role:r||''});
-  }
-  if(!interviewers.length){alert('Add at least one interviewer');return;}
-  var body={session_id:sid,candidate_name:name,candidate_email:email,interview_date:dt,interview_time:tm,duration_minutes:parseInt(dur),interviewers:interviewers};
-  var res=await(await fetch('/api/v1/schedule-interview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-  if(res.status==='scheduled'){alert('Interview scheduled! Invites sent to '+res.invites_sent+' people.\nMeet link: '+(res.meet_link||'pending'));rint(document.getElementById('main'));}
-  else alert('Error: '+JSON.stringify(res));
-}
-
-async function finalDecision(name,email,decision){
-  var msg=decision==='selected'?'Send OFFER to '+name+'?':'Send REJECTION to '+name+'?';
-  if(!confirm(msg))return;
-  var salary='',start='';
-  if(decision==='selected'){salary=prompt('Salary offer (e.g. 15 LPA):','');start=prompt('Start date (e.g. May 1, 2026):','');}
-  var res=await(await fetch('/api/v1/final-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:name,decision:decision,salary:salary||'',start_date:start||''})})).json();
-  alert(decision==='selected'?'Offer sent!':'Rejection sent.');
-  rint(document.getElementById('main'));
-}
-
-function hrDecision(idx,name,email,decision){
-  var note=document.getElementById('hr_note_'+idx)?.value||'';
-  var card=document.getElementById('cand_'+idx);
-  if(decision==='reject'&&!confirm('Reject '+name+'? A rejection email will be sent.'))return;
-
-  // Save decision to backend
-  fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,decision:decision,note:note})}).then(function(r){return r.json()}).then(function(data){
-    if(decision==='approve'){
-      card.style.borderColor='rgba(0,214,143,.5)';
-      card.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:12px;font-weight:600;margin-top:8px">✓ Approved for interview'+(note?' — '+note:'')+'</div>');
-    }else if(decision==='reject'){
-      card.style.borderColor='rgba(255,107,107,.3)';card.style.opacity='.5';
-      card.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:12px;font-weight:600;margin-top:8px">✕ Rejected — email sent'+(note?' — '+note:'')+'</div>');
-    }else{
-      card.style.borderColor='rgba(255,179,68,.3)';
-      card.insertAdjacentHTML('beforeend','<div style="color:var(--warn);font-size:12px;font-weight:600;margin-top:8px">⏸ On hold'+(note?' — '+note:'')+'</div>');
-    }
-    var btns=card.querySelectorAll('.btn-ok,.btn-e,.btn-g');btns.forEach(function(b){b.disabled=true;b.style.opacity='.3'});
-  });
-}
-
-lp().then(()=>rc());
+async function rc(){var m=document.getElementById('main');if(V==='dashboard')await rd(m);else if(V==='new')rnp(m);else if(V==='pipeline'&&SP)await rpd(m);else if(V==='candidates')await rca(m);else if(V==='interviews')await rint(m);else m.innerHTML='<div class="empty"><div class="ei">☰</div><h3>Select a pipeline for audit</h3></div>';}
+async function rd(m){await lp();if(!P.length){m.innerHTML='<div class="empty" style="margin-top:120px"><div class="ei">◈</div><h3>No pipelines yet</h3><p>Create your first AI-powered hiring pipeline</p><button class="btn btn-p mt" style="font-size:14px;padding:10px 24px" onclick="go(\'new\')">✦ Create Pipeline</button></div>';return;}
+m.innerHTML='<div class="ph"><div><h2>Overview</h2><p class="sub">'+new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+'</p></div><button class="btn" onclick="rc()">↻ Refresh</button></div><div class="metrics"><div class="met"><div class="l">Active pipelines</div><div class="v" style="color:var(--a1)">'+P.length+'</div></div><div class="met"><div class="l">Agents running</div><div class="v" style="color:var(--ok)">4</div></div><div class="met"><div class="l">Checkpoints</div><div class="v" style="color:var(--warn)">—</div></div><div class="met"><div class="l">Offers sent</div><div class="v" style="color:var(--a4)">—</div></div></div><div class="ct"><div style="font-size:14px;font-weight:500;margin-bottom:12px">Active Pipelines</div>'+P.map(function(p){return '<div class="card fi" style="cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')"><div class="flex jcb aic"><div><div style="font-size:15px;font-weight:500">'+((p.role_title||'')|| (p.config?.role_title||'Untitled'))+'</div><div style="font-size:11px;color:var(--t4);font-family:var(--mono);margin-top:4px">'+(p.id||'').slice(0,16)+'...</div></div>'+sb(p.status)+'</div></div>';}).join('')+'</div>';}
+function rnp(m){m.innerHTML='<div class="ph"><div><h2>Start new pipeline</h2><p class="sub">Agent 1 will analyze your knowledgebase, map skills, and generate a JD</p></div></div><div class="ct"><div class="card" style="max-width:560px"><div class="mb"><label>Role title</label><input id="r" placeholder="e.g. Full Stack Developer"></div><div class="mb"><label>Experience level</label><input id="e" placeholder="e.g. 2 years"></div><div class="mb"><label>Department</label><input id="d" value="Engineering"></div><div class="mb"><label>Candidate type</label><div class="flex gap" id="ct2"><button class="btn btn-p" data-v="auto">Auto-detect</button><button class="btn" data-v="fresher">Fresher</button><button class="btn" data-v="experienced">Experienced</button></div></div><button class="btn btn-p w100" style="padding:11px;font-size:14px" id="goBtn" onclick="cp2()">✦ Start Pipeline</button><div id="cres" class="mt"></div></div></div>';var t='auto';document.getElementById('ct2').onclick=function(ev){if(!ev.target.dataset.v)return;t=ev.target.dataset.v;document.querySelectorAll('#ct2 .btn').forEach(function(b){b.className=b.dataset.v===t?'btn btn-p':'btn'});};window._t=function(){return t};}
+async function cp2(){var r=document.getElementById('r').value,e=document.getElementById('e').value,d=document.getElementById('d').value,t=window._t();if(!r||!e)return;var b=document.getElementById('goBtn');b.disabled=true;b.textContent='Agent 1 analyzing...';var res=await api('/pipelines',{method:'POST',body:JSON.stringify({role_title:r,experience_level:e,department:d,candidate_type:t})});b.disabled=false;b.textContent='✦ Start Pipeline';var o=document.getElementById('cres');if(res?.error)o.innerHTML='<div class="card" style="border-color:var(--errs)"><span style="color:var(--err);font-size:13px">'+JSON.stringify(res.error)+'</span></div>';else if(res?.id){await lp();o.innerHTML='<div class="card" style="border-color:var(--oks)"><div style="color:var(--ok);font-weight:500;margin-bottom:8px">Pipeline created!</div>'+sb(res.status)+'<button class="btn btn-p mt" onclick="go(\'pipeline\',\''+res.id+'\')">View Pipeline →</button></div>';}}
+async function rpd(m){var d=await api('/pipelines/'+SP);if(d?.error){m.innerHTML='<div style="color:var(--err);padding:40px">'+d.error+'</div>';return;}var hp=!!d.current_checkpoint;var tab='timeline';
+m.innerHTML='<div class="ph"><div><h2>'+(d.config?.role_title||'Pipeline')+'</h2><p class="sub" style="font-family:var(--mono)">'+SP.slice(0,20)+'...</p></div><div class="flex gap aic">'+sb(d.status)+'<button class="btn" onclick="rc()">↻</button></div></div><div class="tabs" id="pt"><div class="tab on" data-t="timeline">Timeline</div><div class="tab" data-t="jd">JD</div><div class="tab" data-t="candidates">Candidates</div><div class="tab" data-t="audit">Audit</div></div>'+(hp?'<div class="cp"><div class="pu"></div><div class="inf"><h4>Checkpoint: '+d.current_checkpoint?.replace(/_/g,' ')+'</h4><p>Review and approve to advance the pipeline</p></div><div class="flex gap"><button class="btn btn-ok" onclick="acp(\'approve\')">✓ Approve</button><button class="btn btn-er" onclick="acp(\'reject\')">✕ Revise</button></div></div>':'')+'<div id="tc"></div>';
+document.getElementById('pt').onclick=function(ev){if(!ev.target.dataset.t)return;tab=ev.target.dataset.t;document.querySelectorAll('#pt .tab').forEach(function(t2){t2.classList.toggle('on',t2.dataset.t===tab)});rt();};
+function rt(){var tc=document.getElementById('tc');if(tab==='timeline')rtl(tc,d);else if(tab==='jd')rjd(tc,d);else if(tab==='candidates')rcl(tc);else if(tab==='audit')rau(tc,d);}rt();}
+function rtl(tc,d){var s=d.status||'';var a1ok=['jd_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;var a2ok=['ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
+var h='<div class="tl">';
+h+='<div class="ti"><div class="tl-l"><div class="tl-d" style="background:var(--a1bg);color:var(--a1);border-color:var(--a1)">A1</div><div class="tl-ln" style="background:var(--a1)"></div></div><div class="tl-c" style="background:var(--a1bg);border-color:rgba(108,92,231,.2)"><div class="flex jcb aic"><h4 style="color:var(--a1t)">'+(a1ok?'JD generated and approved':'Generating JD...')+'</h4><span class="bdg b-a1">'+(a1ok?'Completed':'In progress')+'</span></div>'+(d.jd_published_url?'<p style="color:var(--a1);margin-top:6px"><a href="'+d.jd_published_url+'" target="_blank" style="color:var(--a1)">View published JD →</a></p>':'')+'</div></div>';
+h+='<div class="ti"><div class="tl-l"><div class="tl-d" style="background:var(--a2bg);color:var(--a2);border-color:var(--a2)">A2</div><div class="tl-ln" style="background:'+(a2ok?'var(--a2)':'var(--border)')+'"></div></div><div class="tl-c'+(a1ok?'':' fut')+'" style="background:'+(a2ok?'var(--a2bg)':'var(--bg3)')+';border-color:'+(a2ok?'rgba(29,158,117,.2)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a2ok?'var(--a2t)':'var(--t3)')+'">Resume screening & ranking</h4>'+(a2ok?'<span class="bdg b-a2">Completed</span>':'<span class="bdg" style="color:var(--t4);border-color:var(--border)">Pending</span>')+'</div><p style="color:var(--t3)">Parse resumes, screen against JD, rank candidates</p></div></div>';
+h+='<div class="ti"><div class="tl-l"><div class="tl-d'+(a3ok?' live':'')+'" style="background:var(--a3bg);color:var(--a3);border-color:var(--a3)">A3</div><div class="tl-ln" style="background:'+(a3ok?'var(--a3)':'var(--border)')+'"></div></div><div class="tl-c'+(a2ok?'':' fut')+'" style="background:'+(a3ok?'var(--a3bg)':'var(--bg3)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+''+(a3ok?';border-width:2px':'')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews</h4>'+(a3ok?'<span class="bdg b-a3">Active</span>':'<span class="bdg" style="color:var(--t4);border-color:var(--border)">Pending</span>')+'</div><p style="color:var(--t3)">Generate tailored questions, conduct AI interviews, evaluate</p></div></div>';
+h+='<div class="ti"><div class="tl-l"><div class="tl-d" style="background:var(--a4bg);color:var(--a4);border-color:var(--a4)">A4</div></div><div class="tl-c fut" style="background:var(--bg3);border-color:var(--border)"><div class="flex jcb aic"><h4 style="color:var(--t3)">Final interview & offer</h4><span class="bdg" style="color:var(--t4);border-color:var(--border)">Pending</span></div><p style="color:var(--t4)">Schedule Google Meet, interviewer briefings, offer/rejection</p></div></div>';
+h+='</div><div class="ct"><div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:12px">Upload resumes</div><div class="uz" onclick="document.getElementById(\'fu\').click()"><div style="font-size:28px;margin-bottom:8px;opacity:.2">📄</div><div style="font-size:13px;color:var(--t3)">Drop PDF/DOCX here or click to upload</div></div><input type="file" id="fu" multiple accept=".pdf,.docx" style="display:none" onchange="ul(this.files)"></div></div>';
+tc.innerHTML=h;}
+function rjd(tc,d){tc.innerHTML=d.jd_draft?'<div class="ct"><div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:12px">Generated job description</div><div style="white-space:pre-wrap;font-size:13px;color:var(--t2);line-height:1.7;max-height:600px;overflow:auto">'+d.jd_draft+'</div></div></div>':'<div class="empty"><div class="ei">📝</div><h3>JD not yet generated</h3></div>';}
+async function rcl(tc){var r=await api('/pipelines/'+SP+'/candidates');if(!r?.candidates?.length){tc.innerHTML='<div class="empty"><div class="ei">◎</div><h3>No candidates yet</h3></div>';return;}var h='<div class="ct">';r.candidates.forEach(function(c,i){var col=c.screening_verdict?.includes('Shortlisted')?'ok':c.screening_verdict?.includes('Flagged')?'w':'e';var sc=c.screening_score>=60?'var(--ok)':c.screening_score>=45?'var(--warn)':'var(--err)';h+='<div class="cr fi" id="cd_'+i+'"><div class="cav" style="background:var(--'+col+'bg);color:var(--'+col+');border:1px solid var(--'+col+'s)">'+(c.name||'?').slice(0,2).toUpperCase()+'</div><div class="ci"><div class="cn">'+c.name+(c.escalated?' <span style="font-size:10px;color:var(--warn)">⚠ ESCALATED</span>':'')+'</div><div class="cm">'+(c.candidate_type||'')+' · '+(c.email||'')+'</div>'+(c.decision_note?'<div style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4">'+c.decision_note.slice(0,200)+'</div>':'')+(c.red_flags?.length?'<div style="font-size:10px;color:var(--err);margin-top:3px">Red flags: '+c.red_flags.join(', ')+'</div>':'')+'</div>'+(c.screening_score!=null?'<div class="cs"><div class="n" style="color:'+sc+'">'+c.screening_score+'</div><div class="lb">Screening</div></div>':'')+'<span class="bdg b-'+col+'">'+(c.screening_verdict||'pending')+'</span><div class="flex gap" style="margin-left:8px"><button class="btn btn-ok" data-i="'+i+'" data-n="'+c.name+'" data-e="'+(c.email||'')+'" onclick="hrd(this,\'approve\')">✓</button><button class="btn btn-er" data-i="'+i+'" data-n="'+c.name+'" data-e="'+(c.email||'')+'" onclick="hrd(this,\'reject\')">✕</button></div></div>';});h+='</div>';tc.innerHTML=h;}
+function rau(tc,d){if(!(d.audit_log||[]).length){tc.innerHTML='<div class="empty"><div class="ei">☰</div><h3>No audit entries</h3></div>';return;}var h='<div class="ct">';d.audit_log.slice().reverse().forEach(function(e){var ac=e.agent==='agent_1'?'a1':e.agent==='agent_2'?'a2':e.agent==='agent_3'?'a3':'a4';h+='<div style="font-size:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);display:flex;align-items:center;gap:10px;margin-bottom:6px"><span class="bdg b-'+ac+'">'+e.agent+'</span><span style="color:var(--t2)">'+e.action+'</span><span style="margin-left:auto;font-size:10px;color:var(--t4);font-family:var(--mono)">'+(e.explanation||'').slice(0,80)+'</span></div>';});h+='</div>';tc.innerHTML=h;}
+async function rint(m){var results=[],scheduled=[],approved=false;try{results=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}try{scheduled=(await(await fetch('/api/v1/scheduled-interviews')).json()).interviews||[];}catch(e){}try{var st=await(await fetch('/api/v1/interview/shortlist-status')).json();approved=st.approved_pipelines&&st.approved_pipelines.length>0;}catch(e){}
+var h='<div class="ph"><div><h2>Interviews & scheduling</h2><p class="sub">80% screening + 20% interview = composite score</p></div><button class="btn" onclick="rc()">↻</button></div><div class="ct">';
+if(results.length){for(var i=0;i<results.length;i++){var r=results[i];var cs=r.composite_score||0,is2=r.interview_score||0,ss=r.screening_score||0;var sl=cs>=50,col=sl?'ok':'e';var isSch=scheduled.some(function(s){return s.candidate_name===r.candidate_name});
+h+='<div class="cr fi" id="iv_'+i+'" style="flex-wrap:wrap"><div class="cav" style="background:var(--a3s);color:var(--a3);border:1px solid rgba(216,90,48,.3)">'+(r.candidate_name||'?').slice(0,2).toUpperCase()+'</div><div class="ci"><div class="cn">'+r.candidate_name+'</div><div class="cm">Screening: <strong style="color:var(--a2)">'+ss+'</strong>/100 (80%) · Interview: <strong style="color:var(--a3)">'+is2+'</strong>/100 (20%) · Verdict: '+r.verdict+'</div></div><div class="cs"><div class="n" style="color:var(--'+col+')">'+cs+'</div><div class="lb">Composite</div></div><span class="bdg b-'+col+'">'+(sl?'Shortlisted':'Not shortlisted')+'</span>';
+if(!isSch){h+='<div class="flex gap" style="margin-left:8px"><button class="btn btn-ok" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivd(this.dataset.s,+this.dataset.i,\'qualify\')">✓ Qualify</button><button class="btn btn-er" data-s="'+r.session_id+'" data-i="'+i+'" onclick="ivd(this.dataset.s,+this.dataset.i,\'reject\')">✕ Reject</button></div>';}
+if(isSch)h+='<span style="font-size:11px;color:var(--ok);margin-left:8px">✓ Scheduled</span>';h+='</div>';}
+if(!approved){h+='<div class="cp" style="margin:16px 0"><div class="pu"></div><div class="inf"><h4>Checkpoint 3: Approve interview shortlist</h4><p>Review results, qualify or reject, then approve to enable scheduling</p></div><button class="btn btn-ok" onclick="appSL()">✓ Approve & enable scheduling</button></div>';}}
+if(approved){var qualified=results.filter(function(r){return(r.composite_score||0)>=50||r.hr_decision==='qualify'});
+if(qualified.length&&!scheduled.length){h+='<div style="font-size:14px;font-weight:500;color:var(--ok);margin:20px 0 12px">✓ Shortlist approved — schedule final interviews</div>';for(var j=0;j<qualified.length;j++){var q=qualified[j];var sid=q.session_id;
+h+='<div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:12px">'+q.candidate_name+' <span class="bdg b-ok">Qualified</span></div>';
+h+='<div class="flex gap mb"><div style="flex:1"><label>Date</label><input type="date" id="dt_'+sid+'" value="2026-04-20"></div><div style="flex:1"><label>Time</label><input type="time" id="tm_'+sid+'" value="15:00"></div><div style="flex:1"><label>Duration</label><input type="number" id="dur_'+sid+'" value="60"></div></div>';
+h+='<div id="interviewers_'+sid+'"><div class="flex gap mb"><div style="flex:2"><label>Interviewer</label><input id="in_'+sid+'_0" placeholder="Name"></div><div style="flex:2"><label>Email</label><input id="ie_'+sid+'_0" placeholder="email@ruh.ai"></div><div style="flex:1"><label>Role</label><input id="ir_'+sid+'_0" placeholder="CTO"></div></div></div>';
+h+='<div class="flex gap"><button class="btn" data-sid="'+sid+'" onclick="addIv(this.dataset.sid)">+ Add interviewer</button><button class="btn btn-p" data-sid="'+sid+'" data-nm="'+q.candidate_name+'" data-em="'+(q.candidate_email||'')+'" onclick="schIv(this.dataset.sid,this.dataset.nm,this.dataset.em)">Schedule & send invites</button></div></div>';}}}
+if(scheduled.length){h+='<div style="font-size:14px;font-weight:500;color:var(--warn);margin:20px 0 12px">Scheduled final interviews</div>';for(var k=0;k<scheduled.length;k++){var s=scheduled[k];
+h+='<div class="card"><div class="flex jcb aic mb"><div><div style="font-size:14px;font-weight:500">'+s.candidate_name+'</div><div style="font-size:12px;color:var(--t3)">'+s.date+' at '+s.time+'</div></div><span class="bdg b-w">'+s.status+'</span></div>';
+h+='<div style="font-size:12px;color:var(--t3);margin-bottom:10px">Meet: <a href="'+(s.meet_link||'')+'" target="_blank" style="color:var(--a4)">'+(s.meet_link||'pending')+'</a></div>';
+h+='<div class="flex gap"><button class="btn btn-ok" data-n="'+s.candidate_name+'" data-e="'+(s.candidate_email||'')+'" onclick="fd(this.dataset.n,this.dataset.e,\'selected\')">✓ Selected — send offer</button><button class="btn btn-er" data-n="'+s.candidate_name+'" data-e="'+(s.candidate_email||'')+'" onclick="fd(this.dataset.n,this.dataset.e,\'rejected\')">✕ Not selected</button></div></div>';}}
+if(!results.length&&!scheduled.length)h+='<div class="empty"><div class="ei">▷</div><h3>No interviews yet</h3><p>Complete the AI screening round first</p></div>';
+h+='</div>';m.innerHTML=h;}
+async function rca(m){await lp();if(!P.length){m.innerHTML='<div class="empty"><div class="ei">◎</div><h3>No pipelines</h3></div>';return;}var h='<div class="ph"><div><h2>All candidates</h2></div></div><div class="ct">';for(var i=0;i<P.length;i++){var p=P[i];var r=await api('/pipelines/'+p.id+'/candidates');if(r?.candidates?.length){h+='<div style="font-size:14px;font-weight:500;color:var(--a1);margin:16px 0 8px;cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')">'+(p.role_title||p.config?.role_title||'Pipeline')+' →</div>';r.candidates.forEach(function(c){var col=c.screening_verdict?.includes('Shortlisted')?'ok':c.screening_verdict?.includes('Flagged')?'w':'e';h+='<div class="cr"><div class="cav" style="background:var(--'+col+'bg);color:var(--'+col+')">'+((c.name||'?').slice(0,2).toUpperCase())+'</div><div class="ci"><div class="cn">'+c.name+'</div><div class="cm">'+(c.email||'')+'</div></div><span class="bdg b-'+col+'">'+(c.screening_verdict||'pending')+'</span></div>';});}}h+='</div>';m.innerHTML=h;}
+async function acp(dec){var fb='';if(dec==='reject'){fb=prompt('Feedback:');if(!fb)return;}await api('/pipelines/'+SP+'/approve',{method:'POST',body:JSON.stringify({checkpoint:'jd_approval',decision:dec,feedback:dec==='reject'?fb:undefined})});rc();}
+async function ul(f){if(!f.length)return;var fd2=new FormData();for(var i=0;i<f.length;i++)fd2.append('files',f[i]);await fetch(A+'/pipelines/'+SP+'/upload',{method:'POST',body:fd2});rc();}
+function hrd(btn,dec){var n=btn.dataset.n,e=btn.dataset.e,i=btn.dataset.i;if(dec==='reject'&&!confirm('Reject '+n+'?'))return;fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,email:e,decision:dec})}).then(function(r){return r.json()}).then(function(){var row=document.getElementById('cd_'+i);if(dec==='approve'){row.style.borderColor='var(--oks)';row.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:11px;font-weight:500;margin-top:6px;width:100%">✓ Approved</div>');}else{row.style.borderColor='var(--errs)';row.style.opacity='.4';row.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:11px;font-weight:500;margin-top:6px;width:100%">✕ Rejected</div>');}row.querySelectorAll('.btn-ok,.btn-er').forEach(function(b){b.disabled=true;});});}
+function ivd(sid,idx,dec){if(dec==='reject'&&!confirm('Reject? Email will be sent.'))return;fetch('/api/v1/interview/hr-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,decision:dec})}).then(function(r){return r.json()}).then(function(){var c=document.getElementById('iv_'+idx);if(dec==='qualify'){c.style.borderColor='var(--oks)';c.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:11px;font-weight:500;margin-top:6px;width:100%">✓ Qualified by HR</div>');}else{c.style.borderColor='var(--errs)';c.style.opacity='.4';c.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:11px;font-weight:500;margin-top:6px;width:100%">✕ Rejected</div>');}c.querySelectorAll('.btn-ok,.btn-er').forEach(function(b){b.disabled=true;});});}
+async function appSL(){await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:'approved'})});alert('Shortlist approved!');rint(document.getElementById('main'));}
+var _ic={};function addIv(sid){_ic[sid]=(_ic[sid]||0)+1;var n=_ic[sid];document.getElementById('interviewers_'+sid).insertAdjacentHTML('beforeend','<div class="flex gap mb"><div style="flex:2"><input id="in_'+sid+'_'+n+'" placeholder="Name"></div><div style="flex:2"><input id="ie_'+sid+'_'+n+'" placeholder="Email"></div><div style="flex:1"><input id="ir_'+sid+'_'+n+'" placeholder="Role"></div></div>');}
+async function schIv(sid,name,email){var dt=document.getElementById('dt_'+sid)?.value,tm=document.getElementById('tm_'+sid)?.value,dur=document.getElementById('dur_'+sid)?.value||60;var ivs=[];for(var i=0;i<=(_ic[sid]||0);i++){var n=document.getElementById('in_'+sid+'_'+i)?.value,e=document.getElementById('ie_'+sid+'_'+i)?.value,r=document.getElementById('ir_'+sid+'_'+i)?.value;if(n&&e)ivs.push({name:n,email:e,role:r||''});}if(!ivs.length){alert('Add interviewer');return;}var res=await(await fetch('/api/v1/schedule-interview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,candidate_name:name,candidate_email:email,interview_date:dt,interview_time:tm,duration_minutes:parseInt(dur),interviewers:ivs})})).json();if(res.status==='scheduled'){alert('Scheduled! Meet: '+(res.meet_link||'pending'));rint(document.getElementById('main'));}else alert(JSON.stringify(res));}
+async function fd(name,email,dec){if(!confirm(dec==='selected'?'Send OFFER?':'Send REJECTION?'))return;var sal='',st='';if(dec==='selected'){sal=prompt('Salary:','');st=prompt('Start date:','');}await(await fetch('/api/v1/final-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:name,decision:dec,salary:sal||'',start_date:st||''})})).json();alert(dec==='selected'?'Offer sent!':'Rejection sent.');rint(document.getElementById('main'));}
+lp().then(function(){rc()});
 </script>
 </body>
 </html>
