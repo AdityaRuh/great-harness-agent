@@ -226,9 +226,10 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:#0a0a1a;color:#e0
   function runQuestion(){
     if(!active)return;
     if(qi>=qs.length){
-      avatarSpeak("That concludes our interview. Thank you so much for your thoughtful responses! Your answers have been recorded and our team will evaluate them carefully. You will receive results via email within 24 hours. It was a pleasure speaking with you!",function(){
+      avatarSpeak("That concludes our interview. Thank you for your responses! Evaluating now...",function(){
+        submitTranscript();
         active=false;document.getElementById("endBtn").disabled=true;clearInterval(ti);
-        document.getElementById("liveText").textContent="Interview complete — thank you!";
+        document.getElementById("liveText").textContent="Evaluating your answers...";
       });
       return;
     }
@@ -257,11 +258,12 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:#0a0a1a;color:#e0
     active=false;this.disabled=true;clearInterval(ti);synth.cancel();
     if(recognition)try{recognition.stop()}catch(e){}
     addMsg("Zara","Interview ended. Evaluating your responses...");
-    submitTranscript();
     document.getElementById("avatarCircle").classList.remove("speaking");
     document.getElementById("avatarCircle").classList.remove("listening");
-    document.getElementById("statusBar").className="status-bar";
-    document.getElementById("liveText").textContent="Interview ended";
+    document.getElementById("statusBar").className="status-bar ai-speaking";
+    document.getElementById("statusBar").textContent="Evaluating with AI...";
+    document.getElementById("liveText").textContent="Please wait — evaluating your answers...";
+    submitTranscript();
   });
 
   // Load voices
@@ -278,7 +280,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:#0a0a1a;color:#e0
         if(text)transcript.push({speaker:who==="ZARA"?"AI":"You",text:text});
       }
     });
-    if(transcript.length<2)return;
+    if(transcript.length<1)return;
     var bar=document.getElementById("statusBar");
     bar.className="status-bar ai-speaking";bar.textContent="Evaluating your interview...";
     document.getElementById("liveText").textContent="Sending "+transcript.length+" responses for evaluation...";
