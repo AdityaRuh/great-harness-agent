@@ -124,20 +124,22 @@ async function finalDecision(name,email,decision){
 function hrDecision(idx,name,email,decision){
   var note=document.getElementById('hr_note_'+idx)?.value||'';
   var card=document.getElementById('cand_'+idx);
-  if(decision==='approve'){
-    card.style.borderColor='rgba(0,214,143,.5)';
-    card.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:12px;font-weight:600;margin-top:8px">✓ Approved for interview by HR'+(note?' — '+note:'')+'</div>');
-    // Could also trigger email to candidate here
-  }else if(decision==='reject'){
-    if(!confirm('Reject '+name+'?'))return;
-    card.style.borderColor='rgba(255,107,107,.3)';card.style.opacity='.5';
-    card.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:12px;font-weight:600;margin-top:8px">✕ Rejected by HR'+(note?' — '+note:'')+'</div>');
-  }else{
-    card.style.borderColor='rgba(255,179,68,.3)';
-    card.insertAdjacentHTML('beforeend','<div style="color:var(--warn);font-size:12px;font-weight:600;margin-top:8px">⏸ On hold'+(note?' — '+note:'')+'</div>');
-  }
-  // Remove action buttons
-  var btns=card.querySelectorAll('.btn-ok,.btn-e,.btn-g');btns.forEach(function(b){b.disabled=true;b.style.opacity='.3'});
+  if(decision==='reject'&&!confirm('Reject '+name+'? A rejection email will be sent.'))return;
+
+  // Save decision to backend
+  fetch(A+'/pipelines/'+SP+'/candidates/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,decision:decision,note:note})}).then(function(r){return r.json()}).then(function(data){
+    if(decision==='approve'){
+      card.style.borderColor='rgba(0,214,143,.5)';
+      card.insertAdjacentHTML('beforeend','<div style="color:var(--ok);font-size:12px;font-weight:600;margin-top:8px">✓ Approved for interview'+(note?' — '+note:'')+'</div>');
+    }else if(decision==='reject'){
+      card.style.borderColor='rgba(255,107,107,.3)';card.style.opacity='.5';
+      card.insertAdjacentHTML('beforeend','<div style="color:var(--err);font-size:12px;font-weight:600;margin-top:8px">✕ Rejected — email sent'+(note?' — '+note:'')+'</div>');
+    }else{
+      card.style.borderColor='rgba(255,179,68,.3)';
+      card.insertAdjacentHTML('beforeend','<div style="color:var(--warn);font-size:12px;font-weight:600;margin-top:8px">⏸ On hold'+(note?' — '+note:'')+'</div>');
+    }
+    var btns=card.querySelectorAll('.btn-ok,.btn-e,.btn-g');btns.forEach(function(b){b.disabled=true;b.style.opacity='.3'});
+  });
 }
 
 lp().then(()=>rc());

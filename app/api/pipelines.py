@@ -146,22 +146,46 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
 
     logger.info(f"Resolving checkpoint '{req.checkpoint}' for pipeline {pipeline_id}: {req.decision}")
 
-    # Before advancing past ranking_review: re-run the ranker on current candidates
-    # This is needed because candidates may have applied via careers form AFTER
-    # the initial Agent 2 nodes ran (which had 0 candidates)
+    # Before advancing past ranking_review: re-run ranker + filter by HR decisions
     if state.values.get("current_checkpoint") == "ranking_review":
         candidates = state.values.get("candidates", [])
         if candidates:
             from app.agents.screener.ranker import rank_candidates
-            ranked = rank_candidates(candidates, state.values.get("tech_stack_profile", {}))
-            # Update state with proper rankings
+            from app.api.candidates import _hr_decisions
+
+            decisions = _hr_decisions.get(pipeline_id, {})
+
+            # Filter: only approved candidates advance
+            # Rejected → already got rejection email
+            # Hold → stays for later
+            # Flagged + no HR review → skipped (must be reviewed first)
+            approved = []
+            for cand in candidates:
+                cd = cand.get("candidate", cand.get("parsed_profile", cand))
+                email = cd.get("email", "")
+                name = cd.get("name", "")
+                hr = decisions.get(email) or decisions.get(name) or {}
+                verdict = cand.get("screening_result", {}).get("verdict", "")
+
+                if hr.get("decision") == "reject":
+                    logger.info(f"Skip rejected: {name}")
+                    continue
+                if hr.get("decision") == "hold":
+                    logger.info(f"Skip held: {name}")
+                    continue
+                if "Flagged" in verdict and not hr.get("decision"):
+                    logger.info(f"Skip unreviewed flagged: {name}")
+                    continue
+                approved.append(cand)
+
+            ranked = rank_candidates(approved, state.values.get("tech_stack_profile", {}))
             try:
                 async for _ in graph.astream(
                     Command(update={"ranked_candidates": ranked}),
                     config, stream_mode="values",
                 ):
                     pass
-                logger.info(f"Re-ranked {len(ranked)} candidates before advancing to Agent 3")
+                logger.info(f"Advancing {len(approved)}/{len(candidates)} candidates (rest rejected/held/unreviewed)")
             except Exception as e:
                 logger.warning(f"Re-ranking update failed: {e}")
 

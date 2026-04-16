@@ -162,3 +162,53 @@ async def get_rankings(pipeline_id: str):
             for r in ranked
         ],
     }
+
+
+# Store HR decisions per pipeline
+_hr_decisions: dict[str, dict[str, dict]] = {}  # {pipeline_id: {candidate_email: {decision, note}}}
+
+
+@router.post("/{pipeline_id}/candidates/review")
+async def review_candidate(pipeline_id: str, body: dict):
+    """HR reviews a candidate — approve, reject, or hold."""
+    email = body.get("email", "")
+    name = body.get("name", "")
+    decision = body.get("decision", "")  # approve | reject | hold
+    note = body.get("note", "")
+
+    if not decision:
+        raise HTTPException(status_code=400, detail="Decision required")
+
+    _hr_decisions.setdefault(pipeline_id, {})[email or name] = {
+        "name": name,
+        "email": email,
+        "decision": decision,
+        "note": note,
+    }
+
+    logger.info(f"HR decision for {name}: {decision}" + (f" — {note}" if note else ""))
+
+    # If rejected, send rejection email immediately
+    if decision == "reject" and email:
+        from app.integrations.email import send_email
+        send_email(
+            to=email,
+            subject="Application Update — Ruh AI",
+            body_html=f"""
+            <div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+                <h2 style="color:#1a1a2e">Thank You, {name}</h2>
+                <p>Thank you for your interest in the position at Ruh AI.</p>
+                <p>After careful review, we've decided to move forward with other candidates whose experience more closely aligns with our current needs.</p>
+                <p>We encourage you to apply for future openings.</p>
+                <p>Best regards,<br><strong>Ruh AI Hiring Team</strong></p>
+            </div>""",
+        )
+        logger.info(f"Rejection email sent to {name} ({email})")
+
+    return {"name": name, "decision": decision, "note": note}
+
+
+@router.get("/{pipeline_id}/candidates/decisions")
+async def get_decisions(pipeline_id: str):
+    """Get all HR decisions for a pipeline."""
+    return _hr_decisions.get(pipeline_id, {})
