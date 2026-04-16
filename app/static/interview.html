@@ -246,7 +246,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:#0a0a1a;color:#e0
   document.getElementById("endBtn").addEventListener("click",function(){
     active=false;this.disabled=true;clearInterval(ti);synth.cancel();
     if(recognition)try{recognition.stop()}catch(e){}
-    addMsg("Zara","Interview ended early. Your responses so far have been saved. Thank you for your time!");
+    addMsg("Zara","Interview ended. Evaluating your responses...");
+    submitTranscript();
     document.getElementById("avatarCircle").classList.remove("speaking");
     document.getElementById("avatarCircle").classList.remove("listening");
     document.getElementById("statusBar").className="status-bar";
@@ -255,6 +256,35 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:#0a0a1a;color:#e0
 
   // Load voices
   synth.onvoiceschanged=function(){synth.getVoices()};
+  // ====== SUBMIT TRANSCRIPT FOR EVALUATION ======
+  function submitTranscript(){
+    var msgs=document.querySelectorAll(".msg");
+    var transcript=[];
+    msgs.forEach(function(m){
+      var sp=m.querySelector(".speaker");
+      if(sp){
+        var who=sp.textContent.trim();
+        var text=m.textContent.replace(who,"").trim();
+        if(text)transcript.push({speaker:who==="ZARA"?"AI":"You",text:text});
+      }
+    });
+    if(transcript.length<2)return;
+    var bar=document.getElementById("statusBar");
+    bar.className="status-bar ai-speaking";bar.textContent="Evaluating your interview...";
+    document.getElementById("liveText").textContent="Sending "+transcript.length+" responses for evaluation...";
+    var body={session_id:"__SESSION_ID__",candidate_name:"Candidate",candidate_email:"",role_title:"Full Stack Developer",transcript:transcript};
+    fetch("/api/v1/interview/evaluate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(data){
+      bar.className="status-bar";bar.textContent="";
+      if(data.interview_score!==undefined){
+        var col=data.interview_score>=70?"#4ade80":data.interview_score>=55?"#fbbf24":"#f87171";
+        addMsg("Zara","Your interview has been evaluated. Score: "+data.interview_score+"/100. Verdict: "+data.verdict);
+        document.getElementById("liveText").innerHTML="<strong style=\"color:"+col+"\">Score: "+data.interview_score+"/100 — "+data.verdict+"</strong>";
+      }else{
+        document.getElementById("liveText").textContent="Evaluation submitted.";
+      }
+    }).catch(function(e){document.getElementById("liveText").textContent="Evaluation submitted.";});
+  }
+
   setupMedia();
 })();
 </script>
