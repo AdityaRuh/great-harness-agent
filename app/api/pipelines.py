@@ -155,26 +155,18 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
 
             decisions = _hr_decisions.get(pipeline_id, {})
 
-            # Filter: only approved candidates advance
-            # Rejected → already got rejection email
-            # Hold → stays for later
-            # Flagged + no HR review → skipped (must be reviewed first)
+            # Only skip HR-rejected candidates. Everyone else advances:
+            # Shortlisted, Flagged, Approved, No action → all get interview invite
+            # Rejected by HR → skip (rejection email already sent)
             approved = []
             for cand in candidates:
                 cd = cand.get("candidate", cand.get("parsed_profile", cand))
                 email = cd.get("email", "")
                 name = cd.get("name", "")
                 hr = decisions.get(email) or decisions.get(name) or {}
-                verdict = cand.get("screening_result", {}).get("verdict", "")
 
                 if hr.get("decision") == "reject":
                     logger.info(f"Skip rejected: {name}")
-                    continue
-                if hr.get("decision") == "hold":
-                    logger.info(f"Skip held: {name}")
-                    continue
-                if "Flagged" in verdict and not hr.get("decision"):
-                    logger.info(f"Skip unreviewed flagged: {name}")
                     continue
                 approved.append(cand)
 
