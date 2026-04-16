@@ -5,10 +5,6 @@ Results appear on HR dashboard automatically.
 """
 
 import logging
-import asyncio
-import concurrent.futures
-
-_screen_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 import os
 import uuid
 from datetime import datetime, timezone
@@ -158,21 +154,20 @@ async def apply(pipeline_id: str, name: str = Form(...), email: str = Form(...),
             jd_skills = [str(list(s.values())[0]) if isinstance(s, dict) else str(s) for s in raw]
             jd_requirements = sm
 
-        # Step 1-3: Parse and screen in thread pool (non-blocking)
-        def _do_screen():
-            logger.info(f"Parsing resume for {name}: {resume.filename}")
-            parsed = parse_resume(file_bytes, resume.filename, jd_skills)
-            candidate_type = "fresher" if experience_years < 3 else "experienced"
-            candidate = {**parsed, "candidate_type": candidate_type, "name": name, "email": email, "total_experience_years": experience_years}
-            logger.info(f"Screening {name} as {candidate_type}")
-            if candidate_type == "fresher":
-                result = screen_fresher(candidate, jd_requirements)
-            else:
-                result = screen_experienced(candidate, jd_requirements)
-            return parsed, candidate_type, candidate, result
+        # Step 1: Parse resume
+        logger.info(f"Parsing resume for {name}: {resume.filename}")
+        parsed = parse_resume(file_bytes, resume.filename, jd_skills)
 
-        loop = asyncio.get_event_loop()
-        parsed, candidate_type, candidate, result = await loop.run_in_executor(_screen_executor, _do_screen)
+        # Step 2: Determine fresher vs experienced
+        candidate_type = "fresher" if experience_years < 3 else "experienced"
+        candidate = {**parsed, "candidate_type": candidate_type, "name": name, "email": email, "total_experience_years": experience_years}
+
+        # Step 3: Screen with appropriate SOP
+        logger.info(f"Screening {name} as {candidate_type}")
+        if candidate_type == "fresher":
+            result = screen_fresher(candidate, jd_requirements)
+        else:
+            result = screen_experienced(candidate, jd_requirements)
 
         screening_result = {
             "score": result.get("total_score", 0),
