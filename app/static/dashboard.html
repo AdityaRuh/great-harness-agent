@@ -213,10 +213,11 @@ async function renderPipeline(m){
   var a1ok=['jd_pending_approval','jd_approved','ranking_approved','ranking_approved','jd_published','screening_complete','ranking_complete','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a2ok=['ranking_complete','ranking_approved','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
-  var ivResults=[],schd=[],a4ok=false;
-  try{var tlAll=await Promise.allSettled([tFetch('/api/v1/interview/results'),tFetch('/api/v1/scheduled-interviews')]);
+  var ivResults=[],schd=[],a4ok=false,pending=[];
+  try{var tlAll=await Promise.allSettled([tFetch('/api/v1/interview/results'),tFetch('/api/v1/scheduled-interviews'),tFetch('/api/v1/interview/pending')]);
     if(tlAll[0].status==='fulfilled')ivResults=tlAll[0].value.results||[];
     if(tlAll[1].status==='fulfilled')schd=tlAll[1].value.interviews||[];
+    if(tlAll[2].status==='fulfilled')pending=tlAll[2].value.pending||[];
   }catch(e){}
   a4ok=schd.length>0;if(a4ok||ivResults.length)a3ok=true;
   // Check actual interview/scheduling state
