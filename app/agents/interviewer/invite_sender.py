@@ -33,6 +33,23 @@ def send_interview_invites(
         session_id = str(uuid.uuid4())
         interview_url = f"{settings.app_url}/interview/{session_id}"
 
+        # Generate tailored questions for this candidate and store them
+        try:
+            from app.agents.interviewer.question_generator import generate_interview_questions
+            from app.api.interview_eval import _interview_questions
+            questions_data = generate_interview_questions(
+                candidate=profile,
+                screening_result=candidate.get("screening_result", {}),
+                skills_matrix={},
+                tech_stack_profile={},
+            )
+            q_list = questions_data.get("questions", [])
+            if q_list:
+                _interview_questions[session_id] = q_list
+                logger.info(f"Generated {len(q_list)} tailored questions for {name} (session {session_id[:8]})")
+        except Exception as qe:
+            logger.warning(f"Question generation failed for {name}: {qe}")
+
         body = f"""
         <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #1a1a2e;">Interview Invitation — {role_title}</h2>

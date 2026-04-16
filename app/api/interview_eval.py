@@ -14,6 +14,9 @@ router = APIRouter()
 # Store interview results in memory (keyed by session_id)
 _interview_results: dict[str, dict] = {}
 
+# Store generated questions per session
+_interview_questions: dict[str, list] = {}
+
 
 class TranscriptSubmission(BaseModel):
     session_id: str
@@ -22,6 +25,14 @@ class TranscriptSubmission(BaseModel):
     role_title: str = "Full Stack Developer"
     transcript: list[dict]  # [{"speaker": "AI"|"You", "text": "..."}]
 
+
+
+
+@router.get("/api/v1/interview/questions/{session_id}")
+async def get_interview_questions(session_id: str):
+    """Get generated questions for an interview session."""
+    questions = _interview_questions.get(session_id, [])
+    return {"session_id": session_id, "questions": questions, "total": len(questions)}
 
 @router.post("/api/v1/interview/evaluate")
 async def evaluate_interview(data: TranscriptSubmission):
