@@ -112,6 +112,23 @@ async def get_pipeline(pipeline_id: str):
     if pipeline_id not in _pipelines:
         raise HTTPException(status_code=404, detail="Pipeline not found")
 
+    pdata = _pipelines[pipeline_id]
+
+    # If graph is actively running, return cached state to avoid blocking
+    if pipeline_id in _running_pipelines:
+        cached = pdata.get("last_state_cache", {})
+        return PipelineResponse(
+            id=pipeline_id,
+            status=cached.get("status", pdata.get("last_status", "processing")),
+            config=pdata["config"],
+            tech_stack_profile=cached.get("tech_stack_profile"),
+            skills_matrix=cached.get("skills_matrix"),
+            jd_draft=cached.get("jd_draft"),
+            jd_published_url=cached.get("jd_published_url"),
+            current_checkpoint=cached.get("current_checkpoint"),
+            audit_log=cached.get("audit_log", []),
+        )
+
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
     state = graph.get_state(config)
@@ -120,10 +137,15 @@ async def get_pipeline(pipeline_id: str):
         raise HTTPException(status_code=404, detail="Pipeline state not found")
 
     s = state.values
+
+    # Cache state for when graph is running
+    pdata["last_state_cache"] = {k: s.get(k) for k in ["status","current_checkpoint","tech_stack_profile","skills_matrix","jd_draft","jd_published_url","audit_log","candidates","ranked_candidates"]}
+    pdata["last_status"] = s.get("status", "unknown")
+
     return PipelineResponse(
         id=pipeline_id,
         status=s.get("status", "unknown"),
-        config=_pipelines[pipeline_id]["config"],
+        config=pdata["config"],
         tech_stack_profile=s.get("tech_stack_profile"),
         skills_matrix=s.get("skills_matrix"),
         jd_draft=s.get("jd_draft"),
@@ -205,6 +227,11 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
             result = event
     finally:
         _running_pipelines.discard(pipeline_id)
+
+    # Cache final state after graph completes
+    if result and pipeline_id in _pipelines:
+        _pipelines[pipeline_id]["last_status"] = result.get("status", "unknown")
+        _pipelines[pipeline_id]["last_state_cache"] = {k: result.get(k) for k in ["status","current_checkpoint","tech_stack_profile","skills_matrix","jd_draft","jd_published_url","audit_log","candidates","ranked_candidates"]}
 
     return {
         "pipeline_id": pipeline_id,
