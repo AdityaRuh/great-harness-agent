@@ -5,6 +5,10 @@ import uuid
 from fastapi import APIRouter, HTTPException
 import asyncio
 import concurrent.futures
+
+_graph_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+import asyncio
+import concurrent.futures
 from langgraph.types import Command
 
 from app.schemas.pipeline import PipelineCreate, PipelineResponse, CheckpointApproval
@@ -71,11 +75,22 @@ async def create_pipeline(req: PipelineCreate):
 
     logger.info(f"Starting pipeline {pipeline_id}: {req.role_title} ({req.experience_level})")
 
-    # Run the graph — it will execute Agent 1 nodes until it hits checkpoint_jd_approval
-    # At that point, LangGraph's interrupt() pauses execution
+    # Run the graph in a thread pool so API stays responsive during Claude CLI calls
     result = None
-    async for event in graph.astream(initial_state, config, stream_mode="values"):
-        result = event
+    def _run_graph():
+        import asyncio as _aio
+        _loop = _aio.new_event_loop()
+        _aio.set_event_loop(_loop)
+        try:
+            results = []
+            async def _go():
+                async for event in graph.astream(initial_state, config, stream_mode="values"):
+                    results.append(event)
+            _loop.run_until_complete(_go())
+            return results[-1] if results else None
+        finally:
+            _loop.close()
+    result = await asyncio.get_event_loop().run_in_executor(_graph_executor, _run_graph)
 
     # Store pipeline reference
     _pipelines[pipeline_id] = {
@@ -191,12 +206,24 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
     }
 
     result = None
-    async for event in graph.astream(
-        Command(resume=resume_value),
-        config,
-        stream_mode="values",
-    ):
-        result = event
+    def _run_approve():
+        import asyncio as _aio
+        _loop = _aio.new_event_loop()
+        _aio.set_event_loop(_loop)
+        try:
+            results = []
+            async def _go():
+                async for event in graph.astream(
+                    Command(resume=resume_value),
+                    config,
+                    stream_mode="values",
+                ):
+                    results.append(event)
+            _loop.run_until_complete(_go())
+            return results[-1] if results else None
+        finally:
+            _loop.close()
+    result = await asyncio.get_event_loop().run_in_executor(_graph_executor, _run_approve)
 
     return {
         "pipeline_id": pipeline_id,

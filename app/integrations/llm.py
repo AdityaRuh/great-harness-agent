@@ -116,3 +116,26 @@ def call_llm_json(prompt: str, model: str | None = None) -> dict:
 def call_llm_strong(prompt: str, max_tokens: int = 4096) -> str:
     """Call Claude with the strong model (Opus)."""
     return call_llm(prompt, model=settings.llm_model_strong, max_tokens=max_tokens)
+
+
+async def acall_llm(prompt: str, model: str | None = None, max_tokens: int = 4096) -> str:
+    """Async non-blocking LLM call — runs in thread pool so server stays responsive."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(_executor, lambda: call_llm(prompt, model, max_tokens))
+
+
+async def acall_llm_json(prompt: str, model: str | None = None) -> dict:
+    """Async non-blocking JSON LLM call."""
+    response = await acall_llm(prompt, model)
+    import json
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError:
+        import re as _re
+        json_match = _re.search(r'```(?:json)?\s*([\s\S]*?)```', response)
+        if json_match:
+            return json.loads(json_match.group(1).strip())
+        brace_match = _re.search(r'\{[\s\S]*\}', response)
+        if brace_match:
+            return json.loads(brace_match.group(0))
+        raise ValueError(f"Not valid JSON: {response[:200]}")
