@@ -214,8 +214,10 @@ async function renderPipeline(m){
   var a2ok=['ranking_complete','ranking_approved','shortlist_ready','invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','completed'].indexOf(s)>=0;
   var ivResults=[],schd=[],a4ok=false;
-  try{ivResults=(await tFetch('/api/v1/interview/results',3000)).results||[];}catch(e){}
-  try{schd=(await tFetch('/api/v1/scheduled-interviews',3000)).interviews||[];}catch(e){}
+  try{var tlAll=await Promise.allSettled([tFetch('/api/v1/interview/results',2000),tFetch('/api/v1/scheduled-interviews',2000)]);
+    if(tlAll[0].status==='fulfilled')ivResults=tlAll[0].value.results||[];
+    if(tlAll[1].status==='fulfilled')schd=tlAll[1].value.interviews||[];
+  }catch(e){}
   a4ok=schd.length>0;if(a4ok||ivResults.length)a3ok=true;
   // Check actual interview/scheduling state
   var ivResults=[];try{ivResults=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
@@ -338,9 +340,12 @@ async function renderInterviews(){
   var m=document.getElementById('main');
   m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading interviews...</div></div>';
   var results=[],scheduled=[],approved=false;
-  try{results=(await tFetch('/api/v1/interview/results')).results||[];}catch(e){}
-  try{scheduled=(await tFetch('/api/v1/scheduled-interviews')).interviews||[];}catch(e){}
-  try{var st=await tFetch('/api/v1/interview/shortlist-status');approved=st.approved_pipelines&&st.approved_pipelines.length>0;}catch(e){}
+  try{
+    var all=await Promise.allSettled([tFetch('/api/v1/interview/results',2000),tFetch('/api/v1/scheduled-interviews',2000),tFetch('/api/v1/interview/shortlist-status',2000)]);
+    if(all[0].status==='fulfilled')results=all[0].value.results||[];
+    if(all[1].status==='fulfilled')scheduled=all[1].value.interviews||[];
+    if(all[2].status==='fulfilled')approved=(all[2].value.approved_pipelines||[]).length>0;
+  }catch(e){}
   var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">Interviews & scheduling</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">80% screening + 20% interview = composite score</p>';
   if(results.length){results.forEach(function(r,i){var cs=r.composite_score||0,is2=r.interview_score||0,ss=r.screening_score||0;var sl=cs>=50,col=sl?'ok':'err';var isSch=scheduled.some(function(s2){return s2.candidate_name===r.candidate_name});
     h+='<div class="cr fi" id="iv_'+i+'" style="flex-wrap:wrap"><div class="cav2" style="background:var(--a3bg);color:var(--a3t);border:1px solid var(--a3b)">'+(r.candidate_name||'?').slice(0,2).toUpperCase()+'</div><div class="ci"><div class="cn">'+r.candidate_name+'</div><div class="cm">Screening: <strong style="color:var(--a2)">'+ss+'</strong>/100 (80%) · Interview: <strong style="color:var(--a3)">'+is2+'</strong>/100 (20%)</div></div><div class="cs"><div class="n" style="color:var(--'+col+')">'+cs+'</div><div class="lb">Composite</div></div><span class="bdg b-'+col+'">'+(sl?'Shortlisted':'Not shortlisted')+'</span>';
