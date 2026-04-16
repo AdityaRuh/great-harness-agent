@@ -10,6 +10,10 @@ import json
 import logging
 import os
 import subprocess
+import asyncio
+import concurrent.futures
+
+_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
 from app.config import get_settings
 
@@ -43,6 +47,11 @@ def _call_claude_cli(prompt: str, model: str | None = None) -> str:
         raise RuntimeError(
             "claude CLI not found. Install Claude Code: npm install -g @anthropic-ai/claude-code"
         )
+
+
+def call_llm_threaded(prompt: str, model: str | None = None, max_tokens: int = 4096) -> str:
+    """Non-blocking version — runs LLM call in a thread so server stays responsive."""
+    return call_llm(prompt, model, max_tokens)
 
 
 def _call_anthropic_sdk(prompt: str, model: str | None = None, max_tokens: int = 4096) -> str:
