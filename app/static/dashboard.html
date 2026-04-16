@@ -181,7 +181,7 @@ function renderNav(){
   }
   document.getElementById('mainTabs').innerHTML=tabs;
   document.getElementById('topRight').innerHTML=right;
-  document.getElementById('mainTabs').onclick=function(e){if(!e.target.dataset.t)return;var t=e.target.dataset.t;V=t;render();};
+  document.getElementById('mainTabs').onclick=function(e){if(!e.target.dataset.t)return;var t=e.target.dataset.t;V=t;document.querySelectorAll('#mainTabs .tab').forEach(function(tb){tb.classList.toggle('on',tb.dataset.t===t)});var m=document.getElementById('main');m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading...</div></div>';if(t==='pipeline')renderPipeline(m);else if(t==='candidates')renderCandidatesTab();else if(t==='interviews')renderInterviews();else if(t==='audit')renderAudit();else if(t==='overview'){SP=null;render();}};
 }
 
 async function render(){
