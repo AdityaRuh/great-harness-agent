@@ -199,6 +199,9 @@ If the candidate gave very short or empty answers, score accordingly."""
     evaluation["shortlist_verdict"] = shortlist_verdict
     evaluation["composite_formula"] = "80% screening + 20% interview"
 
+    # Update result with resolved name/email from meta
+    _interview_results[data.session_id]["candidate_name"] = data.candidate_name
+    _interview_results[data.session_id]["candidate_email"] = data.candidate_email
     _interview_results[data.session_id]["composite_score"] = composite_score
     _interview_results[data.session_id]["screening_score"] = screening_score
     _interview_results[data.session_id]["shortlisted"] = shortlisted
