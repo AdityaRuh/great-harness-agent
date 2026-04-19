@@ -307,7 +307,10 @@ async def final_decision(data: FinalDecision):
 
 @router.get("/api/v1/scheduled-interviews")
 async def list_scheduled():
-    return {"total": len(_scheduled), "interviews": list(_scheduled.values())}
+    interviews = []
+    for sid, data in _scheduled.items():
+        interviews.append({**data, "session_id": sid})
+    return {"total": len(_scheduled), "interviews": interviews}
 
 
 @router.get("/api/v1/final-decisions")
