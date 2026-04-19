@@ -83,7 +83,7 @@ def build_pipeline(checkpointer=None):
         db_url = os.environ.get("DATABASE_URL", get_settings().database_url)
         if db_url and db_url.startswith("postgresql") and "user:pass@localhost" not in db_url:
             try:
-                from psycopg_pool import AsyncConnectionPool
+                # psycopg_pool imported as needed
                 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
                 import psycopg
                 import re as _re
@@ -102,9 +102,9 @@ def build_pipeline(checkpointer=None):
                             logger.info("Checkpoint tables already exist — OK")
                         else:
                             logger.warning(f"Checkpoint setup warning: {se}")
-                    # Async pool for runtime
-                    async_pool = AsyncConnectionPool(conninfo=sync_url, min_size=1, max_size=3, open=False)
-                    checkpointer = AsyncPostgresSaver(async_pool)
+                    # Store connection string for async pool creation
+                    # Pool will be opened on first async use
+                    checkpointer = AsyncPostgresSaver.from_conn_string(sync_url)
                     logger.info("Using AsyncPostgresSaver for graph checkpoints")
                 else:
                     from langgraph.checkpoint.memory import MemorySaver
