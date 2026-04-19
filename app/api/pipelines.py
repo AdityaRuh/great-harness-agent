@@ -109,7 +109,12 @@ async def create_pipeline(req: PipelineCreate):
 async def get_pipeline(pipeline_id: str):
     """Get current state of a pipeline."""
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        from app.storage import get_pipeline as storage_get
+        pdata_db = await storage_get(pipeline_id)
+        if pdata_db:
+            _pipelines[pipeline_id] = pdata_db
+        else:
+            raise HTTPException(status_code=404, detail="Pipeline not found")
 
     pdata = _pipelines[pipeline_id]
 
@@ -167,7 +172,12 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
     so Agent 3 gets the proper ranked list.
     """
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        from app.storage import get_pipeline as storage_get3
+        pdata_db = await storage_get3(pipeline_id)
+        if pdata_db:
+            _pipelines[pipeline_id] = pdata_db
+        else:
+            raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
