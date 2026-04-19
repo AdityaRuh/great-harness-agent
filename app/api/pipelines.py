@@ -1,6 +1,7 @@
 """API routes for pipeline management and checkpoint approval."""
 
 import logging
+from datetime import datetime, timezone
 import uuid
 from fastapi import APIRouter, HTTPException
 from langgraph.types import Command
@@ -69,6 +70,26 @@ async def create_pipeline(req: PipelineCreate):
     graph = get_graph()
     config = {"configurable": {"thread_id": thread_id}}
 
+    # Store pipeline reference BEFORE graph runs (so Worker 2 can find it)
+    pipeline_config = {
+        "role_title": req.role_title,
+        "experience_level": req.experience_level,
+        "department": req.department,
+        "candidate_type": req.candidate_type,
+    }
+    _pipelines[pipeline_id] = {
+        "id": pipeline_id,
+        "thread_id": thread_id,
+        "config": pipeline_config,
+        "last_status": "starting",
+        "last_state_cache": {},
+        "created_at": str(datetime.now(timezone.utc)) if "datetime" in dir() else "",
+    }
+    try:
+        await storage_save_pipeline(pipeline_id, pipeline_config, "starting")
+    except Exception as e:
+        logger.warning(f"Early DB save failed: {e}")
+
     logger.info(f"Starting pipeline {pipeline_id}: {req.role_title} ({req.experience_level})")
 
     # Run the pipeline graph
@@ -80,22 +101,17 @@ async def create_pipeline(req: PipelineCreate):
     finally:
         _running_pipelines.discard(pipeline_id)
 
-    # Store pipeline reference
-    _pipelines[pipeline_id] = {
-        "id": pipeline_id,
-        "thread_id": thread_id,
-        "config": {
-            "role_title": req.role_title,
-            "experience_level": req.experience_level,
-            "department": req.department,
-            "candidate_type": req.candidate_type,
-        },
-    }
+    # Update pipeline with final state
+    _pipelines[pipeline_id]["last_status"] = result.get("status", "unknown") if result else "unknown"
+    try:
+        await storage_save_pipeline(pipeline_id, pipeline_config, result.get("status", "unknown") if result else "unknown")
+    except Exception:
+        pass
 
     return PipelineResponse(
         id=pipeline_id,
         status=result.get("status", "unknown") if result else "started",
-        config=_pipelines[pipeline_id]["config"],
+        config=pipeline_config,
         tech_stack_profile=result.get("tech_stack_profile") if result else None,
         skills_matrix=result.get("skills_matrix") if result else None,
         jd_draft=result.get("jd_draft") if result else None,

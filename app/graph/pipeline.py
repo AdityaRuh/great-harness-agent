@@ -93,9 +93,13 @@ def build_pipeline(checkpointer=None):
                 import re as _re
                 sync_url = _re.sub(r'[&?]channel_binding=[^&]*', '', sync_url)
                 if sync_url.startswith("postgresql://"):
+                    import psycopg
+                    # Setup checkpoint tables with autocommit (avoids CONCURRENTLY error)
+                    with psycopg.connect(sync_url, autocommit=True) as setup_conn:
+                        PostgresSaver(setup_conn).setup()
+                    # Create pool for runtime use
                     pool = ConnectionPool(conninfo=sync_url, min_size=1, max_size=3)
                     checkpointer = PostgresSaver(pool)
-                    checkpointer.setup()
                     logger.info("Using PostgresSaver for graph checkpoints")
                 else:
                     from langgraph.checkpoint.memory import MemorySaver
