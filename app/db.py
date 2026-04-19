@@ -121,11 +121,16 @@ def get_database_url():
 
 def get_async_database_url():
     """Convert sync URL to async."""
+    import re
     url = get_database_url()
     if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    if url.startswith("postgresql+psycopg://"):
-        return url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql+psycopg://"):
+        url = url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+    # asyncpg doesn't support sslmode param — remove it (we'll set ssl in connect_args)
+    url = re.sub(r'[?&]sslmode=[^&]*', '', url)
+    # Clean up leftover ? or &
+    url = url.replace('?&', '?').rstrip('?')
     return url
 
 
@@ -146,7 +151,10 @@ async def init_db():
 
     logger.info(f"Connecting to database: {sync_url.split('@')[1] if '@' in sync_url else sync_url}")
 
-    _async_engine = create_async_engine(async_url, pool_size=10, max_overflow=20)
+    # Detect if remote DB (needs SSL)
+    needs_ssl = "neon.tech" in async_url or "supabase" in async_url or "amazonaws" in async_url
+    connect_args = {"ssl": True} if needs_ssl else {}
+    _async_engine = create_async_engine(async_url, pool_size=10, max_overflow=20, connect_args=connect_args)
     _async_session_factory = async_sessionmaker(_async_engine, class_=AsyncSession, expire_on_commit=False)
 
     _sync_engine = create_engine(sync_url, pool_size=5, max_overflow=10)
