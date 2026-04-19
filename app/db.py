@@ -152,18 +152,25 @@ async def init_db():
     logger.info(f"Connecting to database: {sync_url.split('@')[1] if '@' in sync_url else sync_url}")
 
     # Detect if remote DB (needs SSL)
+    import ssl as _ssl
     needs_ssl = "neon.tech" in async_url or "supabase" in async_url or "amazonaws" in async_url
-    connect_args = {"ssl": True} if needs_ssl else {}
-    _async_engine = create_async_engine(async_url, pool_size=10, max_overflow=20, connect_args=connect_args)
+    if needs_ssl:
+        ssl_ctx = _ssl.create_default_context()
+        connect_args = {"ssl": ssl_ctx}
+    else:
+        connect_args = {}
+    _async_engine = create_async_engine(async_url, pool_size=5, max_overflow=10, connect_args=connect_args, pool_timeout=10)
     _async_session_factory = async_sessionmaker(_async_engine, class_=AsyncSession, expire_on_commit=False)
 
-    _sync_engine = create_engine(sync_url, pool_size=5, max_overflow=10)
+    _sync_engine = create_engine(sync_url, pool_size=3, max_overflow=5, pool_timeout=10)
 
     # Create tables
-    async with _async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    logger.info("Database tables created/verified")
+    try:
+        async with _async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created/verified")
+    except Exception as e:
+        logger.warning(f"Table creation issue (may already exist): {e}")
 
 
 async def close_db():
