@@ -31,7 +31,7 @@ class Pipeline(Base):
     config = Column(JSON, default={})
     last_status = Column(String, default="unknown")
     last_state_cache = Column(JSON, default={})
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow())
 
 
 class HRDecision(Base):
@@ -41,7 +41,7 @@ class HRDecision(Base):
     candidate_key = Column(String)  # email or name
     decision = Column(String)  # approve/reject
     note = Column(Text, default="")
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow())
 
 
 class InterviewResult(Base):
@@ -57,7 +57,7 @@ class InterviewResult(Base):
     transcript = Column(JSON, default=[])
     evaluation = Column(JSON, default={})
     hr_decision = Column(String, default="")  # qualify/reject
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow())
 
 
 class InterviewQuestion(Base):
@@ -82,7 +82,7 @@ class ScheduledInterview(Base):
     meet_link = Column(String, default="")
     calendar_event_id = Column(String, default="")
     status = Column(String, default="scheduled")
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow())
 
 
 class Application(Base):
@@ -92,13 +92,13 @@ class Application(Base):
     name = Column(String)
     email = Column(String)
     data = Column(JSON, default={})
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow())
 
 
 class InterviewShortlistApproval(Base):
     __tablename__ = "interview_shortlist_approvals"
     pipeline_id = Column(String, primary_key=True)
-    approved_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    approved_at = Column(DateTime, default=lambda: datetime.utcnow())
 
 
 # ── Engine & Session ─────────────────────────────────────────────

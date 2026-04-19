@@ -94,9 +94,15 @@ def build_pipeline(checkpointer=None):
                 sync_url = _re.sub(r'[&?]channel_binding=[^&]*', '', sync_url)
                 if sync_url.startswith("postgresql://"):
                     import psycopg
-                    # Setup checkpoint tables with autocommit (avoids CONCURRENTLY error)
-                    with psycopg.connect(sync_url, autocommit=True) as setup_conn:
-                        PostgresSaver(setup_conn).setup()
+                    # Setup checkpoint tables (skip if already exist)
+                    try:
+                        with psycopg.connect(sync_url, autocommit=True) as setup_conn:
+                            PostgresSaver(setup_conn).setup()
+                    except Exception as setup_err:
+                        if "already exists" in str(setup_err) or "duplicate key" in str(setup_err):
+                            logger.info("PostgresSaver tables already exist — OK")
+                        else:
+                            raise setup_err
                     # Create pool for runtime use
                     pool = ConnectionPool(conninfo=sync_url, min_size=1, max_size=3)
                     checkpointer = PostgresSaver(pool)

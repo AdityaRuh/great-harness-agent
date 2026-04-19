@@ -83,7 +83,7 @@ async def create_pipeline(req: PipelineCreate):
         "config": pipeline_config,
         "last_status": "starting",
         "last_state_cache": {},
-        "created_at": str(datetime.now(timezone.utc)) if "datetime" in dir() else "",
+        "created_at": "",
     }
     try:
         await storage_save_pipeline(pipeline_id, pipeline_config, "starting")
