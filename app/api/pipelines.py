@@ -249,6 +249,18 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
 @router.get("")
 async def list_pipelines():
     """List all pipelines."""
+    # Sync pipelines from DB if this worker is missing some
+    try:
+        from app.storage import list_all_pipelines, _mem_pipelines
+        from app.db import list_pipelines_db, _async_engine
+        if _async_engine:
+            db_pipelines = await list_pipelines_db()
+            for dp in db_pipelines:
+                if dp["id"] not in _mem_pipelines:
+                    _mem_pipelines[dp["id"]] = dp
+    except Exception:
+        pass
+
     items = []
     graph = get_graph()
     for pid, pdata in _pipelines.items():

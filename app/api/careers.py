@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from app.api.pipelines import get_graph, _pipelines
+from app.storage import get_pipeline as storage_get_pipeline
 from app.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,13 @@ async def careers_listing():
 
 @router.get("/careers/{pipeline_id}", response_class=HTMLResponse)
 async def careers_detail(pipeline_id: str):
-    if pipeline_id not in _pipelines: raise HTTPException(404, "Not found")
+    if pipeline_id not in _pipelines:
+        # Multi-worker: pipeline might be in another worker's memory — check DB
+        pdata = await storage_get_pipeline(pipeline_id)
+        if pdata:
+            _pipelines[pipeline_id] = pdata  # Cache locally
+        else:
+            raise HTTPException(404, "Not found")
     graph = get_graph()
     state = graph.get_state({"configurable": {"thread_id": pipeline_id}})
     if not state or not state.values or not state.values.get("jd_draft"): raise HTTPException(404, "Not found")
