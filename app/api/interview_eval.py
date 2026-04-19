@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 router = APIRouter()
 
-# Store interview results in memory (keyed by session_id)
-_interview_results: dict[str, dict] = {}
-
-# Store generated questions per session
-_interview_questions: dict[str, list] = {}
-_interview_hr_decisions: dict[str, dict] = {}  # HR qualify/reject decisions
-_interview_shortlist_approved: set = set()  # pipeline_ids where HR approved shortlist
-_interview_question_meta: dict[str, dict] = {}  # {session_id: {name, email}}
+# Shared storage dicts (persisted to DB, shared across workers)
+from app.storage import (
+    _mem_interview_results as _interview_results,
+    _mem_interview_questions as _interview_questions,
+    _mem_interview_hr_decisions as _interview_hr_decisions,
+    _mem_shortlist_approved as _interview_shortlist_approved,
+    _mem_interview_question_meta as _interview_question_meta,
+)
 
 
 class TranscriptSubmission(BaseModel):
