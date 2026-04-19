@@ -33,9 +33,24 @@ async def lifespan(app: FastAPI):
     logger.info(f"LLM fast: {settings.llm_model_fast} | strong: {settings.llm_model_strong}")
     logger.info(f"Clawvatar: {settings.clawvatar_url}")
     logger.info(f"HR email: {settings.hr_email or '(not set)'}")
+
+    # Initialize storage (PostgreSQL or in-memory fallback)
+    try:
+        from app.storage import init_storage
+        await init_storage()
+    except Exception as e:
+        logger.warning(f"Storage init failed: {e} — using in-memory")
+
     start_scheduler()
     logger.info("Checkpoint reminder scheduler started")
     yield
+
+    # Cleanup
+    try:
+        from app.db import close_db
+        await close_db()
+    except Exception:
+        pass
     stop_scheduler()
     logger.info("Shutting down")
 

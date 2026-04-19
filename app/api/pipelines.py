@@ -3,12 +3,16 @@
 import logging
 import uuid
 from fastapi import APIRouter, HTTPException
-import asyncio
-import concurrent.futures
 from langgraph.types import Command
 
 from app.schemas.pipeline import PipelineCreate, PipelineResponse, CheckpointApproval
 from app.graph.pipeline import build_pipeline
+from app.storage import (
+    _mem_pipelines as _pipelines,
+    _mem_running_pipelines as _running_pipelines,
+    save_pipeline as storage_save_pipeline,
+    update_pipeline_cache as storage_update_cache,
+)
 
 # Will be set after careers module loads
 _get_applications = None
@@ -25,11 +29,6 @@ def get_graph():
     if _graph is None:
         _graph = build_pipeline()
     return _graph
-
-
-# In-memory pipeline registry (Phase 1 — replace with DB in Phase 2)
-_pipelines: dict[str, dict] = {}
-_running_pipelines: set = set()  # pipelines currently running graph.astream
 
 
 @router.post("", response_model=PipelineResponse)
@@ -139,8 +138,13 @@ async def get_pipeline(pipeline_id: str):
     s = state.values
 
     # Cache state for when graph is running
-    pdata["last_state_cache"] = {k: s.get(k) for k in ["status","current_checkpoint","tech_stack_profile","skills_matrix","jd_draft","jd_published_url","audit_log","candidates","ranked_candidates"]}
+    cache = {k: s.get(k) for k in ["status","current_checkpoint","tech_stack_profile","skills_matrix","jd_draft","jd_published_url","audit_log","candidates","ranked_candidates"]}
+    pdata["last_state_cache"] = cache
     pdata["last_status"] = s.get("status", "unknown")
+    try:
+        await storage_update_cache(pipeline_id, s.get("status", "unknown"), cache)
+    except Exception:
+        pass
 
     return PipelineResponse(
         id=pipeline_id,

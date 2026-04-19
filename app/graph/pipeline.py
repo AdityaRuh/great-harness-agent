@@ -6,10 +6,11 @@ Phase 2-3: Agents 2-4 are placeholder nodes.
 """
 
 import logging
+import os
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import MemorySaver
 
 from app.graph.state import PipelineState
+from app.config import get_settings
 
 # Agent 1 nodes
 from app.graph.nodes.agent1_jd import (
@@ -78,7 +79,29 @@ def build_pipeline(checkpointer=None):
     """Build and compile the full hiring pipeline graph."""
 
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        # Use PostgresSaver if DATABASE_URL is set, otherwise MemorySaver
+        db_url = os.environ.get("DATABASE_URL", get_settings().database_url)
+        if db_url and "localhost" in db_url and db_url != "postgresql+asyncpg://user:pass@localhost:5432/harness":
+            try:
+                from langgraph.checkpoint.postgres import PostgresSaver
+                # PostgresSaver needs a sync psycopg connection string
+                sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+                if sync_url.startswith("postgresql://"):
+                    checkpointer = PostgresSaver.from_conn_string(sync_url)
+                    checkpointer.setup()  # Create checkpoint tables
+                    logger.info("Using PostgresSaver for graph checkpoints")
+                else:
+                    from langgraph.checkpoint.memory import MemorySaver
+                    checkpointer = MemorySaver()
+                    logger.info("Using MemorySaver (fallback)")
+            except Exception as e:
+                logger.warning(f"PostgresSaver failed, using MemorySaver: {e}")
+                from langgraph.checkpoint.memory import MemorySaver
+                checkpointer = MemorySaver()
+        else:
+            from langgraph.checkpoint.memory import MemorySaver
+            checkpointer = MemorySaver()
+            logger.info("Using MemorySaver (no DATABASE_URL configured)")
 
     builder = StateGraph(PipelineState)
 
