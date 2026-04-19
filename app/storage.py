@@ -50,8 +50,11 @@ async def save_pipeline(pipeline_id: str, config: dict, status: str = "unknown")
         try:
             from app.db import save_pipeline as db_save
             await db_save(pipeline_id, config, status)
+            logger.info(f"Pipeline {pipeline_id[:8]} persisted to DB")
         except Exception as e:
-            logger.warning(f"DB save_pipeline failed: {e}")
+            import traceback
+            logger.error(f"DB save_pipeline failed: {e}
+{traceback.format_exc()}")
 
 
 async def get_pipeline(pipeline_id: str) -> Optional[dict]:

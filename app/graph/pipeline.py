@@ -83,6 +83,7 @@ def build_pipeline(checkpointer=None):
         db_url = os.environ.get("DATABASE_URL", get_settings().database_url)
         if db_url and db_url.startswith("postgresql") and "user:pass@localhost" not in db_url:
             try:
+                from psycopg_pool import ConnectionPool
                 from langgraph.checkpoint.postgres import PostgresSaver
                 # PostgresSaver needs a psycopg v3 connection string
                 sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql+psycopg://", "postgresql://")
@@ -92,8 +93,9 @@ def build_pipeline(checkpointer=None):
                 import re as _re
                 sync_url = _re.sub(r'[&?]channel_binding=[^&]*', '', sync_url)
                 if sync_url.startswith("postgresql://"):
-                    checkpointer = PostgresSaver.from_conn_string(sync_url)
-                    checkpointer.setup()  # Create checkpoint tables
+                    pool = ConnectionPool(conninfo=sync_url, min_size=1, max_size=3)
+                    checkpointer = PostgresSaver(pool)
+                    checkpointer.setup()
                     logger.info("Using PostgresSaver for graph checkpoints")
                 else:
                     from langgraph.checkpoint.memory import MemorySaver

@@ -205,6 +205,7 @@ async def save_pipeline(pipeline_id: str, config: dict, status: str = "unknown")
         else:
             session.add(Pipeline(id=pipeline_id, config=config, last_status=status))
         await session.commit()
+        logger.info(f"Pipeline {pipeline_id[:8]} saved to DB (status={status})")
 
 
 async def update_pipeline_cache(pipeline_id: str, status: str, state_cache: dict):
