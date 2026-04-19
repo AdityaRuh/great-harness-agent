@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from app.api.pipelines import get_graph, _pipelines
+from app.storage import get_pipeline as storage_get_pipeline
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/pipelines", tags=["Interviews"])
@@ -13,7 +14,9 @@ router = APIRouter(prefix="/pipelines", tags=["Interviews"])
 async def list_interviews(pipeline_id: str):
     """List all interview sessions for a pipeline."""
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
@@ -51,7 +54,9 @@ async def list_interviews(pipeline_id: str):
 async def get_interview_detail(pipeline_id: str, session_id: str):
     """Get detailed interview session including transcript and scores."""
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
@@ -73,7 +78,9 @@ async def get_interview_detail(pipeline_id: str, session_id: str):
 async def get_shortlist(pipeline_id: str):
     """Get final shortlist (screening + interview composite scores)."""
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}

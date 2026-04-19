@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 
 from app.api.pipelines import get_graph, _pipelines
+from app.storage import get_pipeline as storage_get_pipeline
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/audit", tags=["Audit"])
@@ -26,7 +27,9 @@ async def get_audit_log(pipeline_id: str, agent: str | None = None, limit: int =
     - timestamp
     """
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
@@ -56,7 +59,9 @@ async def get_pipeline_report(pipeline_id: str):
     checkpoint decisions, and candidate journey.
     """
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
@@ -138,7 +143,9 @@ async def get_candidate_journey(pipeline_id: str, candidate_name: str):
     Every touchpoint: parse → screen → rank → invite → interview → verdict.
     """
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}

@@ -170,7 +170,7 @@ If the candidate gave very short or empty answers, score accordingly."""
     if meta.get("email") and not data.candidate_email:
         data.candidate_email = meta["email"]
     if meta.get("screening_score"):
-        screening_score = meta["screening_score"]
+        screening_score = meta.get("screening_score", 0)
     else:
         # Fallback: search applications
         try:
