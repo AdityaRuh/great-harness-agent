@@ -20,7 +20,9 @@ async def upload_resumes(pipeline_id: str, files: List[UploadFile] = File(...)):
     when the graph advances through Agent 2 nodes.
     """
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
@@ -92,7 +94,9 @@ async def upload_resumes(pipeline_id: str, files: List[UploadFile] = File(...)):
 async def list_candidates(pipeline_id: str):
     """List all candidates in a pipeline with their screening status."""
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
@@ -132,7 +136,9 @@ async def list_candidates(pipeline_id: str):
 async def get_rankings(pipeline_id: str):
     """Get the ranked candidate list (after Agent 2 completes)."""
     if pipeline_id not in _pipelines:
-        raise HTTPException(status_code=404, detail="Pipeline not found")
+        _pd = await storage_get_pipeline(pipeline_id)
+        if _pd: _pipelines[pipeline_id] = _pd
+        else: raise HTTPException(status_code=404, detail="Pipeline not found")
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
