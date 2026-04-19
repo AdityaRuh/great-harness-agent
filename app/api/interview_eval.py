@@ -155,6 +155,20 @@ If the candidate gave very short or empty answers, score accordingly."""
     screening_score = 0
     # First try session metadata (set when invite was sent)
     meta = _interview_question_meta.get(data.session_id, {})
+    # Multi-worker: fetch from DB if not in local memory
+    if not meta:
+        try:
+            from app.storage import get_interview_questions as _get_q
+            _, meta = await _get_q(data.session_id)
+            if meta:
+                _interview_question_meta[data.session_id] = meta
+        except Exception:
+            pass
+    # Use meta name if POST body has generic name
+    if meta.get("name") and (not data.candidate_name or data.candidate_name in ("Candidate", "Unknown", "")):
+        data.candidate_name = meta["name"]
+    if meta.get("email") and not data.candidate_email:
+        data.candidate_email = meta["email"]
     if meta.get("screening_score"):
         screening_score = meta["screening_score"]
     else:
