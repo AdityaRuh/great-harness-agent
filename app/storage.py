@@ -60,9 +60,15 @@ async def get_pipeline(pipeline_id: str) -> Optional[dict]:
     if _use_db:
         try:
             from app.db import get_pipeline_data
-            return await get_pipeline_data(pipeline_id)
-        except Exception:
-            pass
+            result = await get_pipeline_data(pipeline_id)
+            if result:
+                logger.info(f"Pipeline {pipeline_id[:8]} loaded from DB (cross-worker)")
+                _mem_pipelines[pipeline_id] = result  # cache locally
+                return result
+            else:
+                logger.warning(f"Pipeline {pipeline_id[:8]} not found in DB")
+        except Exception as e:
+            logger.warning(f"DB get_pipeline failed: {e}")
     return None
 
 
