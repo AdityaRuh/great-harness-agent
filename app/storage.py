@@ -22,6 +22,7 @@ _mem_interview_hr_decisions: dict[str, dict] = {}
 _mem_scheduled: dict[str, dict] = {}
 _mem_applications: dict[str, list] = {}
 _mem_shortlist_approved: set = set()
+_mem_final_decisions: dict = {}
 _mem_running_pipelines: set = set()
 
 

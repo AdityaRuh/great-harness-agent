@@ -18,7 +18,7 @@ settings = get_settings()
 router = APIRouter()
 
 from app.storage import _mem_scheduled as _scheduled  # shared across workers
-_final_decisions: dict[str, dict] = {}
+from app.storage import _mem_final_decisions as _final_decisions  # shared across workers
 
 
 class ScheduleRequest(BaseModel):
