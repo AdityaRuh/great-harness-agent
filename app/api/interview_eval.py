@@ -199,9 +199,11 @@ If the candidate gave very short or empty answers, score accordingly."""
 
     logger.info(f"Interview evaluated: {data.candidate_name} → interview={interview_score}, screening={screening_score}, composite={composite_score}/100 → {shortlist_verdict}")
 
+    # Color for email templates
+    verdict_color = "#4ade80" if interview_score >= 70 else "#fbbf24" if interview_score >= 55 else "#f87171"
+
     # Send result email to candidate
     if data.candidate_email:
-        verdict_color = "#4ade80" if interview_score >= 70 else "#fbbf24" if interview_score >= 55 else "#f87171"
         email_body = f"""
         <div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
             <h2 style="color:#1a1a2e">Interview Complete — {data.role_title}</h2>
