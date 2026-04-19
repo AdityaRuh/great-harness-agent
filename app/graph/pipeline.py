@@ -83,30 +83,29 @@ def build_pipeline(checkpointer=None):
         db_url = os.environ.get("DATABASE_URL", get_settings().database_url)
         if db_url and db_url.startswith("postgresql") and "user:pass@localhost" not in db_url:
             try:
-                from psycopg_pool import ConnectionPool
-                from langgraph.checkpoint.postgres import PostgresSaver
-                # PostgresSaver needs a psycopg v3 connection string
+                from psycopg_pool import AsyncConnectionPool
+                from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+                import psycopg
+                import re as _re
                 sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql+psycopg://", "postgresql://")
                 if not sync_url.startswith("postgresql://"):
                     sync_url = db_url
-                # Remove channel_binding param if present
-                import re as _re
                 sync_url = _re.sub(r'[&?]channel_binding=[^&]*', '', sync_url)
                 if sync_url.startswith("postgresql://"):
-                    import psycopg
-                    # Setup checkpoint tables (skip if already exist)
+                    # Setup tables using sync connection
                     try:
+                        from langgraph.checkpoint.postgres import PostgresSaver as SyncSaver
                         with psycopg.connect(sync_url, autocommit=True) as setup_conn:
-                            PostgresSaver(setup_conn).setup()
-                    except Exception as setup_err:
-                        if "already exists" in str(setup_err) or "duplicate key" in str(setup_err):
-                            logger.info("PostgresSaver tables already exist — OK")
+                            SyncSaver(setup_conn).setup()
+                    except Exception as se:
+                        if "already exists" in str(se) or "duplicate key" in str(se):
+                            logger.info("Checkpoint tables already exist — OK")
                         else:
-                            raise setup_err
-                    # Create pool for runtime use
-                    pool = ConnectionPool(conninfo=sync_url, min_size=1, max_size=3)
-                    checkpointer = PostgresSaver(pool)
-                    logger.info("Using PostgresSaver for graph checkpoints")
+                            logger.warning(f"Checkpoint setup warning: {se}")
+                    # Async pool for runtime
+                    async_pool = AsyncConnectionPool(conninfo=sync_url, min_size=1, max_size=3, open=False)
+                    checkpointer = AsyncPostgresSaver(async_pool)
+                    logger.info("Using AsyncPostgresSaver for graph checkpoints")
                 else:
                     from langgraph.checkpoint.memory import MemorySaver
                     checkpointer = MemorySaver()
