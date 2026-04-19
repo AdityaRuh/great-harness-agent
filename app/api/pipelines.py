@@ -28,6 +28,13 @@ _graph = None
 def get_graph(checkpointer=None):
     global _graph
     if _graph is None:
+        # Try to get async checkpointer from app state
+        if checkpointer is None:
+            try:
+                from app.main import app as _app
+                checkpointer = getattr(_app.state, "checkpointer", None)
+            except Exception:
+                pass
         _graph = build_pipeline(checkpointer=checkpointer)
     return _graph
 
@@ -67,15 +74,7 @@ async def create_pipeline(req: PipelineCreate):
         "audit_log": [],
     }
 
-    # Get graph with async checkpointer from app state if available
-    from starlette.requests import Request as _Req
-    _cp = None
-    try:
-        from app.main import app as _app
-        _cp = getattr(_app.state, "checkpointer", None)
-    except Exception:
-        pass
-    graph = get_graph(checkpointer=_cp)
+    graph = get_graph()
     config = {"configurable": {"thread_id": thread_id}}
 
     # Store pipeline reference BEFORE graph runs (so Worker 2 can find it)
