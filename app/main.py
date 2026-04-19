@@ -41,12 +41,41 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Storage init failed: {e} — using in-memory")
 
+    # Initialize graph checkpointer (async)
+    try:
+        import os, re
+        db_url = os.environ.get("DATABASE_URL", settings.database_url)
+        if db_url and db_url.startswith("postgresql") and "user:pass@localhost" not in db_url:
+            sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql+psycopg://", "postgresql://")
+            sync_url = re.sub(r'[&?]channel_binding=[^&]*', '', sync_url)
+            from psycopg_pool import AsyncConnectionPool
+            from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+            import psycopg
+            # Setup tables
+            try:
+                from langgraph.checkpoint.postgres import PostgresSaver as SyncSaver
+                with psycopg.connect(sync_url, autocommit=True) as sc:
+                    SyncSaver(sc).setup()
+            except Exception as se:
+                if "already exists" not in str(se) and "duplicate key" not in str(se):
+                    logger.warning(f"Checkpoint table setup: {se}")
+            # Create and open async pool
+            pool = AsyncConnectionPool(conninfo=sync_url, min_size=1, max_size=3)
+            await pool.open()
+            app.state.checkpointer = AsyncPostgresSaver(pool)
+            app.state.checkpoint_pool = pool
+            logger.info("AsyncPostgresSaver initialized with open pool")
+    except Exception as e:
+        logger.warning(f"AsyncPostgresSaver init failed: {e}")
+
     start_scheduler()
     logger.info("Checkpoint reminder scheduler started")
     yield
 
     # Cleanup
     try:
+        if hasattr(app.state, "checkpoint_pool"):
+            await app.state.checkpoint_pool.close()
         from app.db import close_db
         await close_db()
     except Exception:

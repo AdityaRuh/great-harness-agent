@@ -6,11 +6,9 @@ Phase 2-3: Agents 2-4 are placeholder nodes.
 """
 
 import logging
-import os
 from langgraph.graph import StateGraph, END
 
 from app.graph.state import PipelineState
-from app.config import get_settings
 
 # Agent 1 nodes
 from app.graph.nodes.agent1_jd import (
@@ -79,45 +77,10 @@ def build_pipeline(checkpointer=None):
     """Build and compile the full hiring pipeline graph."""
 
     if checkpointer is None:
-        # Use PostgresSaver if DATABASE_URL is set, otherwise MemorySaver
-        db_url = os.environ.get("DATABASE_URL", get_settings().database_url)
-        if db_url and db_url.startswith("postgresql") and "user:pass@localhost" not in db_url:
-            try:
-                # psycopg_pool imported as needed
-                from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-                import psycopg
-                import re as _re
-                sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql+psycopg://", "postgresql://")
-                if not sync_url.startswith("postgresql://"):
-                    sync_url = db_url
-                sync_url = _re.sub(r'[&?]channel_binding=[^&]*', '', sync_url)
-                if sync_url.startswith("postgresql://"):
-                    # Setup tables using sync connection
-                    try:
-                        from langgraph.checkpoint.postgres import PostgresSaver as SyncSaver
-                        with psycopg.connect(sync_url, autocommit=True) as setup_conn:
-                            SyncSaver(setup_conn).setup()
-                    except Exception as se:
-                        if "already exists" in str(se) or "duplicate key" in str(se):
-                            logger.info("Checkpoint tables already exist — OK")
-                        else:
-                            logger.warning(f"Checkpoint setup warning: {se}")
-                    # Store connection string for async pool creation
-                    # Pool will be opened on first async use
-                    checkpointer = AsyncPostgresSaver.from_conn_string(sync_url)
-                    logger.info("Using AsyncPostgresSaver for graph checkpoints")
-                else:
-                    from langgraph.checkpoint.memory import MemorySaver
-                    checkpointer = MemorySaver()
-                    logger.info("Using MemorySaver (fallback)")
-            except Exception as e:
-                logger.warning(f"PostgresSaver failed, using MemorySaver: {e}")
-                from langgraph.checkpoint.memory import MemorySaver
-                checkpointer = MemorySaver()
-        else:
-            from langgraph.checkpoint.memory import MemorySaver
-            checkpointer = MemorySaver()
-            logger.info("Using MemorySaver (no DATABASE_URL configured)")
+        # Use provided checkpointer or fall back to MemorySaver
+        from langgraph.checkpoint.memory import MemorySaver
+        checkpointer = MemorySaver()
+        logger.info("Using MemorySaver (checkpointer will be overridden if AsyncPostgresSaver is available)")
 
     builder = StateGraph(PipelineState)
 
