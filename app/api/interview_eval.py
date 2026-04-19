@@ -35,6 +35,16 @@ class TranscriptSubmission(BaseModel):
 async def get_interview_questions(session_id: str):
     """Get generated questions for an interview session."""
     questions = _interview_questions.get(session_id, [])
+    if not questions:
+        try:
+            from app.storage import get_interview_questions as storage_get_q
+            questions, meta_db = await storage_get_q(session_id)
+            if questions:
+                _interview_questions[session_id] = questions
+                if meta_db:
+                    _interview_question_meta[session_id] = meta_db
+        except Exception:
+            pass
     # Also return candidate info if available
     meta = _interview_question_meta.get(session_id, {})
     return {"session_id": session_id, "questions": questions, "total": len(questions),
@@ -47,6 +57,14 @@ async def get_interview_questions(session_id: str):
 async def get_pending_interviews():
     """Get interviews that are pending (invite sent but not completed)."""
     pending = []
+    # Also check DB for pending interviews
+    if not _interview_question_meta:
+        try:
+            from app.storage import list_pending_interviews as storage_pending
+            db_pending = await storage_pending()
+            return {"pending": db_pending, "total": len(db_pending)}
+        except Exception:
+            pass
     for sid, meta in _interview_question_meta.items():
         if sid not in _interview_results:
             pending.append({
@@ -223,6 +241,16 @@ async def get_interview_result(session_id: str):
 
 @router.get("/api/v1/interview/results")
 async def list_interview_results():
+    # Sync from DB if local memory is empty (multi-worker)
+    if not _interview_results:
+        try:
+            from app.storage import list_interview_results as storage_list
+            db_results = await storage_list()
+            for r in db_results:
+                if r.get("session_id") and r["session_id"] not in _interview_results:
+                    _interview_results[r["session_id"]] = r
+        except Exception:
+            pass
     """List all interview results."""
     return {
         "total": len(_interview_results),
