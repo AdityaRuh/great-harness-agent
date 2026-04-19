@@ -33,7 +33,7 @@ async def careers_listing():
     for pid, pdata in _pipelines.items():
         config = {"configurable": {"thread_id": pid}}
         try:
-            state = graph.get_state(config)
+            state = await graph.aget_state(config)
             if not state or not state.values: continue
             s = state.values
             if s.get("jd_approved") and s.get("jd_draft"):
@@ -55,7 +55,7 @@ async def careers_detail(pipeline_id: str):
         else:
             raise HTTPException(404, "Not found")
     graph = get_graph()
-    state = graph.get_state({"configurable": {"thread_id": pipeline_id}})
+    state = await graph.aget_state({"configurable": {"thread_id": pipeline_id}})
     if not state or not state.values or not state.values.get("jd_draft"): raise HTTPException(404, "Not found")
     s = state.values
     role = s.get("role_title", "Open Position")
@@ -153,7 +153,7 @@ async def apply(pipeline_id: str, name: str = Form(...), email: str = Form(...),
         # Get JD skills from pipeline state
         graph = get_graph()
         config = {"configurable": {"thread_id": pipeline_id}}
-        state = graph.get_state(config)
+        state = await graph.aget_state(config)
         jd_skills = []
         jd_requirements = {}
         if state and state.values:

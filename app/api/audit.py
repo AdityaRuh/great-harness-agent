@@ -30,7 +30,7 @@ async def get_audit_log(pipeline_id: str, agent: str | None = None, limit: int =
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
 
     if not state or not state.values:
         raise HTTPException(status_code=404, detail="Pipeline state not found")
@@ -60,7 +60,7 @@ async def get_pipeline_report(pipeline_id: str):
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
 
     if not state or not state.values:
         raise HTTPException(status_code=404, detail="Pipeline state not found")
@@ -142,7 +142,7 @@ async def get_candidate_journey(pipeline_id: str, candidate_name: str):
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
 
     if not state or not state.values:
         raise HTTPException(status_code=404, detail="Pipeline state not found")
@@ -264,7 +264,7 @@ async def get_global_metrics():
     for pid in _pipelines:
         config = {"configurable": {"thread_id": pid}}
         try:
-            state = graph.get_state(config)
+            state = await graph.aget_state(config)
             status = state.values.get("status", "unknown") if state and state.values else "unknown"
             statuses[status] = statuses.get(status, 0) + 1
         except Exception:

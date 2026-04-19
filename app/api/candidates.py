@@ -28,7 +28,7 @@ async def upload_resumes(pipeline_id: str, files: List[UploadFile] = File(...)):
     config = {"configurable": {"thread_id": pipeline_id}}
 
     # Get current state
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
     if not state or not state.values:
         raise HTTPException(status_code=400, detail="Pipeline state not found")
 
@@ -100,7 +100,7 @@ async def list_candidates(pipeline_id: str):
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
 
     if not state or not state.values:
         raise HTTPException(status_code=404, detail="Pipeline state not found")
@@ -142,7 +142,7 @@ async def get_rankings(pipeline_id: str):
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
 
     if not state or not state.values:
         raise HTTPException(status_code=404, detail="Pipeline state not found")

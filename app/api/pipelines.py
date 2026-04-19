@@ -158,7 +158,7 @@ async def get_pipeline(pipeline_id: str):
 
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
 
     if not state or not state.values:
         raise HTTPException(status_code=404, detail="Pipeline state not found")
@@ -205,7 +205,7 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
 
-    state = graph.get_state(config)
+    state = await graph.aget_state(config)
     if not state or not state.next:
         raise HTTPException(status_code=400, detail="Pipeline is not waiting at a checkpoint")
 
@@ -307,7 +307,7 @@ async def list_pipelines():
             continue
         config = {"configurable": {"thread_id": pid}}
         try:
-            state = graph.get_state(config)
+            state = await graph.aget_state(config)
             status = state.values.get("status", "unknown") if state and state.values else "unknown"
             pdata["last_status"] = status  # cache it
         except Exception:
