@@ -5,6 +5,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.api.pipelines import get_graph, _pipelines
+from app.storage import get_pipeline as storage_get_pipeline
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/pipelines", tags=["Candidates"])
