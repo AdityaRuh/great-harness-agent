@@ -111,7 +111,12 @@ _sync_engine = None
 def get_database_url():
     """Get database URL from settings or env."""
     import os
-    return os.environ.get("DATABASE_URL", settings.database_url)
+    url = os.environ.get("DATABASE_URL", settings.database_url)
+    # Remove channel_binding param (not supported by all drivers)
+    if "channel_binding" in url:
+        import re
+        url = re.sub(r'[&?]channel_binding=[^&]*', '', url)
+    return url
 
 
 def get_async_database_url():

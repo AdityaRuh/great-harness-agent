@@ -81,11 +81,13 @@ def build_pipeline(checkpointer=None):
     if checkpointer is None:
         # Use PostgresSaver if DATABASE_URL is set, otherwise MemorySaver
         db_url = os.environ.get("DATABASE_URL", get_settings().database_url)
-        if db_url and "localhost" in db_url and db_url != "postgresql+asyncpg://user:pass@localhost:5432/harness":
+        if db_url and db_url.startswith("postgresql") and "user:pass@localhost" not in db_url:
             try:
                 from langgraph.checkpoint.postgres import PostgresSaver
                 # PostgresSaver needs a sync psycopg connection string
                 sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+                if not sync_url.startswith("postgresql://"):
+                    sync_url = db_url  # Already a sync URL
                 if sync_url.startswith("postgresql://"):
                     checkpointer = PostgresSaver.from_conn_string(sync_url)
                     checkpointer.setup()  # Create checkpoint tables
