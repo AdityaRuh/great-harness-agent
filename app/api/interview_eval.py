@@ -190,6 +190,13 @@ If the candidate gave very short or empty answers, score accordingly."""
     _interview_results[data.session_id]["shortlisted"] = shortlisted
     _interview_results[data.session_id]["shortlist_verdict"] = shortlist_verdict
 
+    # Persist to DB for multi-worker
+    try:
+        from app.storage import save_interview_result as _save_ir
+        await _save_ir(data.session_id, _interview_results[data.session_id])
+    except Exception as e:
+        logger.warning(f"DB save interview result failed: {e}")
+
     logger.info(f"Interview evaluated: {data.candidate_name} → interview={interview_score}, screening={screening_score}, composite={composite_score}/100 → {shortlist_verdict}")
 
     # Send result email to candidate
