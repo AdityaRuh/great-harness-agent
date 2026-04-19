@@ -265,6 +265,13 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
     finally:
         _running_pipelines.discard(pipeline_id)
 
+    # Auto-approve shortlist if this was a shortlist checkpoint
+    try:
+        from app.api.interview_eval import _interview_shortlist_approved
+        _interview_shortlist_approved.add(pipeline_id)
+    except Exception:
+        pass
+
     # Cache final state after graph completes
     if result and pipeline_id in _pipelines:
         _pipelines[pipeline_id]["last_status"] = result.get("status", "unknown")
