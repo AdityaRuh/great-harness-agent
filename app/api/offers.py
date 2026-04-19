@@ -241,8 +241,8 @@ async def final_decision(data: FinalDecision):
     candidate_name = data.session_id
     candidate_email = ""
     if scheduled:
-        candidate_name = scheduled["candidate_name"]
-        candidate_email = scheduled["candidate_email"]
+        candidate_name = scheduled.get("candidate_name", data.session_id)
+        candidate_email = scheduled.get("candidate_email", "")
     elif ai_result:
         candidate_name = ai_result.get("candidate_name", data.session_id)
         candidate_email = ai_result.get("candidate_email", "")
