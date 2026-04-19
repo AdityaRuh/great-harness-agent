@@ -124,6 +124,16 @@ def get_async_database_url():
     url = get_database_url()
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql+psycopg://"):
+        return url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+    return url
+
+
+def get_sync_database_url():
+    """Get sync URL with psycopg v3 driver (not psycopg2)."""
+    url = get_database_url()
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
     return url
 
 
@@ -132,7 +142,7 @@ async def init_db():
     global _async_engine, _async_session_factory, _sync_engine
 
     async_url = get_async_database_url()
-    sync_url = get_database_url()
+    sync_url = get_sync_database_url()
 
     logger.info(f"Connecting to database: {sync_url.split('@')[1] if '@' in sync_url else sync_url}")
 
