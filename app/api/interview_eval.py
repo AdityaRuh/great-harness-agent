@@ -329,6 +329,12 @@ async def approve_interview_shortlist(body: dict):
     """HR approves the shortlist — only then scheduling becomes available."""
     pipeline_id = body.get("pipeline_id", "approved")
     _interview_shortlist_approved.add(pipeline_id)
+    # Persist to DB for multi-worker
+    try:
+        from app.storage import approve_shortlist as storage_approve_sl
+        await storage_approve_sl(pipeline_id)
+    except Exception:
+        pass
     logger.info(f"HR approved interview shortlist for pipeline {pipeline_id}")
     return {"approved": True, "pipeline_id": pipeline_id}
 
@@ -336,4 +342,14 @@ async def approve_interview_shortlist(body: dict):
 @router.get("/api/v1/interview/shortlist-status")
 async def shortlist_status():
     """Check if HR has approved the shortlist."""
-    return {"approved_pipelines": list(_interview_shortlist_approved)}
+    # Also check DB for cross-worker approvals
+    result = list(_interview_shortlist_approved)
+    if not result:
+        try:
+            from app.storage import get_approved_shortlists as storage_get_sl
+            result = await storage_get_sl()
+            for pid in result:
+                _interview_shortlist_approved.add(pid)
+        except Exception:
+            pass
+    return {"approved_pipelines": result}
