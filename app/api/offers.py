@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 router = APIRouter()
 
-_scheduled: dict[str, dict] = {}
+from app.storage import _mem_scheduled as _scheduled  # shared across workers
 _final_decisions: dict[str, dict] = {}
 
 

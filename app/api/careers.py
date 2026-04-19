@@ -23,7 +23,7 @@ router = APIRouter(tags=["Careers"])
 UPLOAD_DIR = "./uploads/applications"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-_applications: dict[str, list] = {}
+from app.storage import _mem_applications as _applications  # shared across workers
 
 
 @router.get("/careers", response_class=HTMLResponse)

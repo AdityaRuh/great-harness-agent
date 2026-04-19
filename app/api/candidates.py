@@ -173,7 +173,7 @@ async def get_rankings(pipeline_id: str):
 
 
 # Store HR decisions per pipeline
-_hr_decisions: dict[str, dict[str, dict]] = {}  # {pipeline_id: {candidate_email: {decision, note}}}
+from app.storage import _mem_hr_decisions as _hr_decisions  # shared across workers
 
 
 @router.post("/{pipeline_id}/candidates/review")
