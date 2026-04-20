@@ -34,9 +34,79 @@ async def init_storage():
         await init_db()
         _use_db = True
         logger.info("Storage: PostgreSQL active")
+        # Preload all data from DB into memory
+        await _preload_from_db()
     except Exception as e:
         _use_db = False
         logger.warning(f"Storage: In-memory mode (PostgreSQL unavailable: {e})")
+
+
+async def _preload_from_db():
+    """Load all persisted data from DB into memory on startup."""
+    try:
+        from app.db import (
+            list_pipelines_db, list_interview_results_db,
+            list_pending_interviews_db, get_approved_shortlists,
+        )
+        # Pipelines
+        db_pipelines = await list_pipelines_db()
+        for p in db_pipelines:
+            if p["id"] not in _mem_pipelines:
+                _mem_pipelines[p["id"]] = p
+        logger.info(f"Preloaded {len(db_pipelines)} pipelines from DB")
+
+        # Interview results
+        db_results = await list_interview_results_db()
+        for r in db_results:
+            sid = r.get("session_id")
+            if sid and sid not in _mem_interview_results:
+                _mem_interview_results[sid] = r
+        logger.info(f"Preloaded {len(db_results)} interview results from DB")
+
+        # Pending interviews (question meta)
+        db_pending = await list_pending_interviews_db()
+        for p in db_pending:
+            sid = p.get("session_id", "")
+            if sid and sid not in _mem_interview_question_meta:
+                _mem_interview_question_meta[sid] = {
+                    "name": p.get("candidate_name", ""),
+                    "email": p.get("candidate_email", ""),
+                    "pipeline_id": p.get("pipeline_id", ""),
+                }
+
+        # Scheduled interviews
+        try:
+            from app.db import list_scheduled_db
+            db_sched = await list_scheduled_db()
+            for s in db_sched:
+                sid = s.get("session_id", "")
+                if sid and sid not in _mem_scheduled:
+                    _mem_scheduled[sid] = s
+            if db_sched:
+                logger.info(f"Preloaded {len(db_sched)} scheduled interviews from DB")
+        except Exception:
+            pass
+
+        # HR decisions
+        try:
+            from app.db import list_hr_decisions_db
+            db_hr = await list_hr_decisions_db()
+            for d in db_hr:
+                sid = d.get("session_id", "")
+                if sid:
+                    _mem_interview_hr_decisions[sid] = d
+        except Exception:
+            pass
+
+        # Shortlist approvals
+        db_approved = await get_approved_shortlists()
+        for pid in db_approved:
+            _mem_shortlist_approved.add(pid)
+        if db_approved:
+            logger.info(f"Preloaded {len(db_approved)} shortlist approvals from DB")
+
+    except Exception as e:
+        logger.warning(f"DB preload partially failed: {e}")
 
 
 def is_db_active() -> bool:
