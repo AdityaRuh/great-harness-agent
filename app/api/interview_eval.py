@@ -316,7 +316,7 @@ async def hr_interview_decision(body: dict):
     if decision == "reject" and result.get("candidate_email"):
         from app.integrations.email import send_email
         send_email(
-            to=result["candidate_email"],
+            to=result.get("candidate_email", ""),
             subject="Application Update — Ruh AI",
             body_html=f"""<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px">
                 <h2>Thank You, {result.get('candidate_name', 'Candidate')}</h2>
