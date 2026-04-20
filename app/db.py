@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String, Integer, Float, Text, Boolean, DateTime, JSON, create_engine
+from sqlalchemy import Column, String, Integer, Float, Text, Boolean, DateTime, JSON, create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy import text
