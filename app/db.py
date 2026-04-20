@@ -444,7 +444,7 @@ async def save_scheduled_db(session_id: str, data: dict):
 async def list_hr_decisions_db() -> list[dict]:
     """List all HR interview decisions from DB."""
     async with get_session() as session:
-        result = await session.execute(select(InterviewResult).where(InterviewResult.hr_decision.isnot(None)))
+        result = await session.execute(select(InterviewResult).where(InterviewResult.hr_decision != ""))
         rows = result.scalars().all()
         return [{"session_id": r.id, "decision": r.hr_decision, "note": ""} for r in rows if r.hr_decision]
 
