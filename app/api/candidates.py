@@ -93,6 +93,14 @@ async def upload_resumes(pipeline_id: str, files: List[UploadFile] = File(...)):
 @router.get("/{pipeline_id}/candidates")
 async def list_candidates(pipeline_id: str):
     """List all candidates in a pipeline with their screening status."""
+    # Sync HR decisions from DB (cross-worker)
+    try:
+        from app.db import get_hr_decisions_for_pipeline
+        db_decisions = await get_hr_decisions_for_pipeline(pipeline_id)
+        if db_decisions:
+            _hr_decisions[pipeline_id] = db_decisions
+    except Exception:
+        pass
     if pipeline_id not in _pipelines:
         _pd = await storage_get_pipeline(pipeline_id)
         if _pd: _pipelines[pipeline_id] = _pd

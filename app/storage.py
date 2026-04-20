@@ -301,3 +301,13 @@ async def get_approved_shortlists() -> list[str]:
         except Exception:
             pass
     return results
+
+
+async def list_interview_hr_decisions() -> list[dict]:
+    if _use_db:
+        try:
+            from app.db import list_hr_decisions_db
+            return await list_hr_decisions_db()
+        except Exception:
+            pass
+    return [{"session_id": k, **v} for k, v in _mem_interview_hr_decisions.items()]

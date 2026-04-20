@@ -41,8 +41,8 @@ async def get_interview_questions(session_id: str):
             questions, meta_db = await storage_get_q(session_id)
             if questions:
                 _interview_questions[session_id] = questions
-                if meta_db:
-                    _interview_question_meta[session_id] = meta_db
+            if meta_db:
+                _interview_question_meta[session_id] = meta_db
         except Exception:
             pass
     # Also return candidate info if available
@@ -57,14 +57,16 @@ async def get_interview_questions(session_id: str):
 async def get_pending_interviews():
     """Get interviews that are pending (invite sent but not completed)."""
     pending = []
-    # Also check DB for pending interviews
-    if not _interview_question_meta:
-        try:
-            from app.storage import list_pending_interviews as storage_pending
-            db_pending = await storage_pending()
-            return {"pending": db_pending, "total": len(db_pending)}
-        except Exception:
-            pass
+    # Always sync pending from DB (workers have separate memory)
+    try:
+        from app.storage import list_pending_interviews as storage_pending
+        db_pending = await storage_pending()
+        for p in db_pending:
+            sid = p.get("session_id", "")
+            if sid and sid not in _interview_question_meta:
+                _interview_question_meta[sid] = {"name": p.get("candidate_name", ""), "email": p.get("candidate_email", "")}
+    except Exception:
+        pass
     for sid, meta in _interview_question_meta.items():
         if sid not in _interview_results:
             pending.append({
@@ -267,16 +269,19 @@ async def get_interview_result(session_id: str):
 
 @router.get("/api/v1/interview/results")
 async def list_interview_results():
-    # Sync from DB if local memory is empty (multi-worker)
-    if not _interview_results:
-        try:
-            from app.storage import list_interview_results as storage_list
-            db_results = await storage_list()
-            for r in db_results:
-                if r.get("session_id") and r["session_id"] not in _interview_results:
-                    _interview_results[r["session_id"]] = r
-        except Exception:
-            pass
+    # Always sync from DB (workers have separate memory)
+    try:
+        from app.storage import list_interview_results as storage_list
+        db_results = await storage_list()
+        for r in db_results:
+            sid = r.get("session_id")
+            if sid:
+                # DB is source of truth — merge with any local updates
+                existing = _interview_results.get(sid, {})
+                merged = {**r, **existing}  # local overrides DB
+                _interview_results[sid] = merged
+    except Exception:
+        pass
     """List all interview results."""
     return {
         "total": len(_interview_results),
@@ -300,6 +305,16 @@ async def list_interview_results():
 @router.post("/api/v1/interview/hr-decision")
 async def hr_interview_decision(body: dict):
     """HR manually qualifies or rejects a candidate after AI interview."""
+    # Sync HR decisions from DB first (cross-worker)
+    try:
+        from app.storage import list_interview_hr_decisions as storage_hr_list
+        db_decisions = await storage_hr_list()
+        for d in db_decisions:
+            sid = d.get("session_id", "")
+            if sid:
+                _interview_hr_decisions[sid] = d
+    except Exception:
+        pass
     session_id = body.get("session_id", "")
     decision = body.get("decision", "")  # qualify | reject
     note = body.get("note", "")
@@ -345,14 +360,12 @@ async def approve_interview_shortlist(body: dict):
 @router.get("/api/v1/interview/shortlist-status")
 async def shortlist_status():
     """Check if HR has approved the shortlist."""
-    # Also check DB for cross-worker approvals
-    result = list(_interview_shortlist_approved)
-    if not result:
-        try:
-            from app.storage import get_approved_shortlists as storage_get_sl
-            result = await storage_get_sl()
-            for pid in result:
-                _interview_shortlist_approved.add(pid)
-        except Exception:
-            pass
-    return {"approved_pipelines": result}
+    # Always sync from DB (workers have separate memory)
+    try:
+        from app.storage import get_approved_shortlists as storage_get_sl
+        db_approved = await storage_get_sl()
+        for pid in db_approved:
+            _interview_shortlist_approved.add(pid)
+    except Exception:
+        pass
+    return {"approved_pipelines": list(_interview_shortlist_approved)}

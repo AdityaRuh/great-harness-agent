@@ -406,3 +406,73 @@ async def update_interview_hr_decision(session_id: str, decision: str):
             await session.commit()
             return True
         return False
+
+
+async def list_scheduled_db() -> list[dict]:
+    """List all scheduled interviews from DB."""
+    async with get_session() as session:
+        result = await session.execute(select(ScheduledInterview))
+        rows = result.scalars().all()
+        return [{"session_id": r.id, "candidate_name": r.candidate_name, "candidate_email": r.candidate_email,
+                 "date": r.date, "time": r.time, "meet_link": r.meet_link, "status": r.status,
+                 "interviewers": r.interviewers or []} for r in rows]
+
+
+async def save_scheduled_db(session_id: str, data: dict):
+    """Save scheduled interview to DB."""
+    async with get_session() as session:
+        existing = await session.get(ScheduledInterview, session_id)
+        if existing:
+            existing.candidate_name = data.get("candidate_name", "")
+            existing.candidate_email = data.get("candidate_email", "")
+            existing.date = data.get("date", "")
+            existing.time = data.get("time", "")
+            existing.meet_link = data.get("meet_link", "")
+            existing.status = data.get("status", "scheduled")
+            existing.interviewers = data.get("interviewers", [])
+        else:
+            session.add(ScheduledInterview(
+                id=session_id, candidate_name=data.get("candidate_name", ""),
+                candidate_email=data.get("candidate_email", ""),
+                date=data.get("date", ""), time=data.get("time", ""),
+                meet_link=data.get("meet_link", ""), status=data.get("status", "scheduled"),
+                interviewers=data.get("interviewers", []),
+            ))
+        await session.commit()
+
+
+async def list_hr_decisions_db() -> list[dict]:
+    """List all HR interview decisions from DB."""
+    async with get_session() as session:
+        result = await session.execute(select(InterviewResult).where(InterviewResult.hr_decision.isnot(None)))
+        rows = result.scalars().all()
+        return [{"session_id": r.id, "decision": r.hr_decision, "note": ""} for r in rows if r.hr_decision]
+
+
+async def get_hr_decisions_for_pipeline(pipeline_id: str) -> dict:
+    """Get HR decisions for a pipeline from DB."""
+    async with get_session() as session:
+        result = await session.execute(
+            select(HRDecision).where(HRDecision.pipeline_id == pipeline_id)
+        )
+        rows = result.scalars().all()
+        decisions = {}
+        for r in rows:
+            decisions[r.candidate_key] = {"decision": r.decision, "note": r.note or ""}
+        return decisions
+
+
+async def save_hr_decision_db(pipeline_id: str, candidate_key: str, decision: str, note: str = ""):
+    """Save HR decision to DB."""
+    async with get_session() as session:
+        key = f"{pipeline_id}:{candidate_key}"
+        existing = await session.get(HRDecision, key)
+        if existing:
+            existing.decision = decision
+            existing.note = note
+        else:
+            session.add(HRDecision(
+                id=key, pipeline_id=pipeline_id,
+                candidate_key=candidate_key, decision=decision, note=note,
+            ))
+        await session.commit()

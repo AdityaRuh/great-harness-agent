@@ -141,21 +141,6 @@ async def get_pipeline(pipeline_id: str):
 
     pdata = _pipelines[pipeline_id]
 
-    # If graph is actively running, return cached state to avoid blocking
-    if pipeline_id in _running_pipelines:
-        cached = pdata.get("last_state_cache", {})
-        return PipelineResponse(
-            id=pipeline_id,
-            status=cached.get("status", pdata.get("last_status", "processing")),
-            config=pdata["config"],
-            tech_stack_profile=cached.get("tech_stack_profile"),
-            skills_matrix=cached.get("skills_matrix"),
-            jd_draft=cached.get("jd_draft"),
-            jd_published_url=cached.get("jd_published_url"),
-            current_checkpoint=cached.get("current_checkpoint"),
-            audit_log=cached.get("audit_log", []),
-        )
-
     graph = get_graph()
     config = {"configurable": {"thread_id": pipeline_id}}
     state = await graph.aget_state(config)

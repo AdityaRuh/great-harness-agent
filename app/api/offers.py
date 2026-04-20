@@ -146,7 +146,7 @@ async def schedule_final_interview(data: ScheduleRequest):
         logger.info(f"Briefing sent to interviewer: {interviewer['name']} ({interviewer['email']})")
 
     # Store schedule
-    _scheduled[data.session_id] = {
+    sched_data = {
         "candidate_name": data.candidate_name,
         "candidate_email": data.candidate_email,
         "date": data.interview_date,
@@ -155,6 +155,13 @@ async def schedule_final_interview(data: ScheduleRequest):
         "interviewers": data.interviewers,
         "status": "scheduled",
     }
+    _scheduled[data.session_id] = sched_data
+    # Persist to DB for cross-worker
+    try:
+        from app.storage import save_scheduled_interview as storage_save_sched
+        await storage_save_sched(data.session_id, sched_data)
+    except Exception:
+        pass
 
     return {
         "status": "scheduled",
@@ -307,6 +314,16 @@ async def final_decision(data: FinalDecision):
 
 @router.get("/api/v1/scheduled-interviews")
 async def list_scheduled():
+    # Always sync from DB (workers have separate memory)
+    try:
+        from app.storage import list_scheduled_interviews as storage_sched
+        db_scheduled = await storage_sched()
+        for s in db_scheduled:
+            sid = s.get("session_id", "")
+            if sid and sid not in _scheduled:
+                _scheduled[sid] = s
+    except Exception:
+        pass
     interviews = []
     for sid, data in _scheduled.items():
         interviews.append({**data, "session_id": sid})
