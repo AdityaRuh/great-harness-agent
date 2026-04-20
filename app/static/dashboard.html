@@ -390,7 +390,19 @@ async function renderPipeline(m){
   // Agent 4 — Blue
   h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a4ok?' live':'')+'\" style=\"background:var(--a4bg);color:var(--a4t)\">A4</div></div>';
   h+='<div class="tl-card'+(a4ok?'':' fut')+'" style="background:'+(a4ok?'var(--a4bg)':'var(--bg2)')+';border-color:'+(a4ok?'var(--a4b)':'var(--border)')+'">'+(a4ok?'<div class="flex jcb aic"><h4 style="color:var(--a4t)">Human interviews'+(d.config?.interview_rounds>1?' ('+d.config.interview_rounds+' rounds)':'')+' — scheduled</h4><span class="bdg b-a4">Active</span></div>':'<h4 style="color:var(--t3)">Final interview + offer</h4>')+'<p style="color:'+(a4ok?'var(--a4t)':'var(--t3)')+'">Google Meet auto-scheduled · Interviewer briefings · Offer/rejection emails</p>';
-  if(schd.length){schd.forEach(function(si){h+='<div class="crow" style="margin-top:8px"><div class="cav" style="background:var(--a4bg);color:var(--a4t)">'+(si.candidate_name||'?').slice(0,2).toUpperCase()+'</div><div class="cinfo"><div class="cname">'+si.candidate_name+'</div><div class="cmeta">'+si.date+' at '+si.time+(si.meet_link?' · <a href="'+si.meet_link+'" target="_blank" style="color:var(--a4)">Meet link</a>':'')+'</div></div><span class="cbdg" style="background:var(--a4bg);color:var(--a4t);border:1px solid var(--a4b)">Scheduled</span></div>';});}
+  var _tRounds=d.config?.interview_rounds||1;
+  if(schd.length){
+    // Show round progress if multi-round
+    if(_tRounds>1){
+      var _completedRounds=schd.length;
+      h+='<div style="display:flex;gap:6px;margin:10px 0 4px">';
+      for(var _rr=1;_rr<=_tRounds;_rr++){
+        var _rdone=_rr<=_completedRounds;
+        h+='<div style="flex:1;height:4px;border-radius:2px;background:'+(_rdone?'var(--a4)':'var(--border)')+';transition:all .3s"></div>';
+      }
+      h+='</div><div style="font-size:11px;color:var(--a4t);margin-bottom:8px">Round '+Math.min(schd.length,_tRounds)+' of '+_tRounds+'</div>';
+    }
+    schd.forEach(function(si){h+='<div class="crow" style="margin-top:6px"><div class="cav" style="background:var(--a4bg);color:var(--a4t)">'+(si.candidate_name||'?').slice(0,2).toUpperCase()+'</div><div class="cinfo"><div class="cname">'+si.candidate_name+(_tRounds>1?' <span class="bdg b-a4" style="font-size:8px;padding:2px 6px">R'+(si.round_number||1)+'</span>':'')+'</div><div class="cmeta">'+si.date+' at '+si.time+(si.meet_link?' · <a href="'+si.meet_link+'" target="_blank" style="color:var(--a4)">Meet link</a>':'')+'</div></div><span class="cbdg" style="background:var(--a4bg);color:var(--a4t);border:1px solid var(--a4b)">Scheduled</span></div>';});}
   h+='</div></div>';
 
   h+='</div>';m.innerHTML=h;
