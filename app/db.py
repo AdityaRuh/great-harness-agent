@@ -49,6 +49,7 @@ class InterviewResult(Base):
     session_id = Column(String, primary_key=True)
     candidate_name = Column(String)
     candidate_email = Column(String, default="")
+    pipeline_id = Column(String, default="")
     screening_score = Column(Float, default=0)
     interview_score = Column(Float, default=0)
     composite_score = Column(Float, default=0)
@@ -65,6 +66,7 @@ class InterviewQuestion(Base):
     session_id = Column(String, primary_key=True)
     candidate_name = Column(String, default="")
     candidate_email = Column(String, default="")
+    pipeline_id = Column(String, default="")
     screening_score = Column(Float, default=0)
     pipeline_id = Column(String, default="")
     questions = Column(JSON, default=[])
@@ -285,7 +287,8 @@ async def get_interview_result(session_id: str) -> dict | None:
         r = await session.get(InterviewResult, session_id)
         if r:
             return {"session_id": r.session_id, "candidate_name": r.candidate_name,
-                    "candidate_email": r.candidate_email, "screening_score": r.screening_score,
+                    "candidate_email": r.candidate_email, "pipeline_id": r.pipeline_id or "",
+                    "screening_score": r.screening_score,
                     "interview_score": r.interview_score, "composite_score": r.composite_score,
                     "shortlisted": r.shortlisted, "shortlist_verdict": r.shortlist_verdict,
                     "transcript": r.transcript, "evaluation": r.evaluation,
@@ -297,11 +300,12 @@ async def list_interview_results_db() -> list[dict]:
     async with get_session() as session:
         result = await session.execute(text(
             "SELECT session_id, candidate_name, candidate_email, screening_score, interview_score, "
-            "composite_score, shortlisted, shortlist_verdict, hr_decision FROM interview_results ORDER BY created_at DESC"
+            "composite_score, shortlisted, shortlist_verdict, hr_decision, pipeline_id FROM interview_results ORDER BY created_at DESC"
         ))
         return [{"session_id": r[0], "candidate_name": r[1], "candidate_email": r[2],
                  "screening_score": r[3], "interview_score": r[4], "composite_score": r[5],
-                 "shortlisted": r[6], "shortlist_verdict": r[7], "hr_decision": r[8]} for r in result]
+                 "shortlisted": r[6], "shortlist_verdict": r[7], "hr_decision": r[8],
+                 "pipeline_id": r[9] if len(r) > 9 else ""} for r in result]
 
 
 async def save_interview_questions(session_id: str, questions: list, meta: dict):
