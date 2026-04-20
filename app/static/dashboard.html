@@ -265,7 +265,7 @@ async function renderPipeline(m){
   h+='</div></div>';
 
   // Agent 3 — Coral
-  h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a3ok?' live':'')+'" style="background:var(--a3bg);color:var(--a3t)">A3</div><div class="tl-line" style="background:'+(a3ok?'var(--a3)':'var(--border)')+'"></div></div>';
+  h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a3ok&&!a4ok?' live':'')+'" style="background:var(--a3bg);color:var(--a3t)">A3</div><div class="tl-line" style="background:'+(a3ok?'var(--a3)':'var(--border)')+'"></div></div>';
   h+='<div class="tl-card'+(a2ok?'':' fut')+''+(a3ok?' active':'')+'" style="background:'+(a3ok?'var(--bg2)':'var(--bg2)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews'+(a4ok?' completed':a3ok?' in progress':'')+'</h4>'+(a4ok?'<span class="bdg b-a3">Completed</span>':a3ok?'<span class="bdg b-a3">Active now</span>':'<span class="bdg" style="color:var(--t3);border-color:var(--border)">Pending</span>')+'</div>';
   // Show candidate rows if interviews are active
   if(a3ok){
