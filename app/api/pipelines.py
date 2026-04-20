@@ -359,6 +359,8 @@ async def list_pipelines():
                 "id": pid,
                 "role_title": pdata["config"]["role_title"],
                 "status": pdata.get("last_status", "processing"),
+                "config": pdata.get("config", {}),
+                "created_at": pdata.get("created_at", ""),
             })
             continue
         config = {"configurable": {"thread_id": pid}}
@@ -372,5 +374,7 @@ async def list_pipelines():
             "id": pid,
             "role_title": pdata["config"]["role_title"],
             "status": status,
+            "config": pdata.get("config", {}),
+            "created_at": pdata.get("created_at", ""),
         })
     return items

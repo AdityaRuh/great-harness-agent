@@ -388,8 +388,8 @@ async function renderPipeline(m){
   h+='</div></div>';
 
   // Agent 4 — Blue
-  h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a4ok?' live':'')+'\" style=\"background:var(--a4bg);color:var(--a4t)\">A4</div></div>';
-  h+='<div class="tl-card'+(a4ok?'':' fut')+'" style="background:'+(a4ok?'var(--a4bg)':'var(--bg2)')+';border-color:'+(a4ok?'var(--a4b)':'var(--border)')+'">'+(a4ok?'<div class="flex jcb aic"><h4 style="color:var(--a4t)">Human interviews'+(d.config?.interview_rounds>1?' ('+d.config.interview_rounds+' rounds)':'')+' — scheduled</h4><span class="bdg b-a4">Active</span></div>':'<h4 style="color:var(--t3)">Final interview + offer</h4>')+'<p style="color:'+(a4ok?'var(--a4t)':'var(--t3)')+'">Google Meet auto-scheduled · Interviewer briefings · Offer/rejection emails</p>';
+  h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a4ok?' live':'')+'\" style=\"background:var(--a4bg);color:var(--a4t)\">R1</div></div>';
+  h+='<div class="tl-card'+(a4ok?'':' fut')+'" style="background:'+(a4ok?'var(--a4bg)':'var(--bg2)')+';border-color:'+(a4ok?'var(--a4b)':'var(--border)')+'">'+(a4ok?'<div class="flex jcb aic"><h4 style="color:var(--a4t)">Human interviews'+(d.config?.interview_rounds>1?' ('+d.config.interview_rounds+' rounds)':'')+' — scheduled</h4><span class="bdg b-a4">Active</span></div>':'<h4 style="color:var(--t3)">Human interviews'+(d.config?.interview_rounds>1?' ('+d.config.interview_rounds+' rounds)':'')+' + offer</h4>')+'<p style="color:'+(a4ok?'var(--a4t)':'var(--t3)')+'">Google Meet auto-scheduled · Interviewer briefings · Offer/rejection emails</p>';
   var _tRounds=d.config?.interview_rounds||1;
   if(schd.length){
     // Show round progress if multi-round
