@@ -46,15 +46,18 @@ def send_interview_invites(
             q_list = questions_data.get("questions", [])
             if q_list:
                 _interview_questions[session_id] = q_list
-                # Persist to DB for multi-worker
+                # Persist to DB — use sync approach since we're in a thread
                 try:
                     import asyncio
                     from app.storage import save_interview_questions as _save_q
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
-                        asyncio.ensure_future(_save_q(session_id, q_list, {"name": name, "email": email, "screening_score": screening.get("total_score", 0), "pipeline_id": pipeline_id}))
-                except Exception:
-                    pass
+                        loop.create_task(_save_q(session_id, q_list, {"name": name, "email": email, "screening_score": screening.get("total_score", 0), "pipeline_id": pipeline_id}))
+                    else:
+                        asyncio.run(_save_q(session_id, q_list, {"name": name, "email": email, "screening_score": screening.get("total_score", 0), "pipeline_id": pipeline_id}))
+                except Exception as _qe:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Failed to save questions to DB: {_qe}")
                 from app.api.interview_eval import _interview_question_meta
                 screening_score = candidate.get("screening_result", {}).get("total_score", 0)
                 _interview_question_meta[session_id] = {"name": name, "email": email, "screening_score": screening_score, "pipeline_id": pipeline_id}
