@@ -66,6 +66,7 @@ class InterviewQuestion(Base):
     candidate_name = Column(String, default="")
     candidate_email = Column(String, default="")
     screening_score = Column(Float, default=0)
+    pipeline_id = Column(String, default="")
     questions = Column(JSON, default=[])
 
 
@@ -311,12 +312,14 @@ async def save_interview_questions(session_id: str, questions: list, meta: dict)
             existing.candidate_name = meta.get("name", "")
             existing.candidate_email = meta.get("email", "")
             existing.screening_score = meta.get("screening_score", 0)
+            existing.pipeline_id = meta.get("pipeline_id", "")
         else:
             session.add(InterviewQuestion(
                 session_id=session_id, questions=questions,
                 candidate_name=meta.get("name", ""),
                 candidate_email=meta.get("email", ""),
                 screening_score=meta.get("screening_score", 0),
+                pipeline_id=meta.get("pipeline_id", ""),
             ))
         await session.commit()
 
@@ -334,13 +337,14 @@ async def list_pending_interviews_db() -> list[dict]:
     async with get_session() as session:
         result = await session.execute(text(
             "SELECT iq.session_id, iq.candidate_name, iq.candidate_email, iq.screening_score, "
-            "json_array_length(iq.questions::json) as q_count "
+            "json_array_length(iq.questions::json) as q_count, iq.pipeline_id "
             "FROM interview_questions iq "
             "LEFT JOIN interview_results ir ON iq.session_id = ir.session_id "
             "WHERE ir.session_id IS NULL"
         ))
         return [{"session_id": r[0], "candidate_name": r[1], "candidate_email": r[2],
-                 "screening_score": r[3], "questions_count": r[4], "status": "invite_sent"} for r in result]
+                 "screening_score": r[3], "questions_count": r[4], "status": "invite_sent",
+                 "pipeline_id": r[5] if len(r) > 5 else ""} for r in result]
 
 
 async def save_scheduled_interview(data: dict):

@@ -64,7 +64,7 @@ async def get_pending_interviews(request: Request = None):
         for p in db_pending:
             sid = p.get("session_id", "")
             if sid and sid not in _interview_question_meta:
-                _interview_question_meta[sid] = {"name": p.get("candidate_name", ""), "email": p.get("candidate_email", "")}
+                _interview_question_meta[sid] = {"name": p.get("candidate_name", ""), "email": p.get("candidate_email", ""), "pipeline_id": p.get("pipeline_id", "")}
     except Exception:
         pass
     for sid, meta in _interview_question_meta.items():
