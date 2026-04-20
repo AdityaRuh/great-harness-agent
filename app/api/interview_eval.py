@@ -295,7 +295,7 @@ async def list_interview_results():
                 "composite_score": r.get("composite_score", 0),
                 "shortlisted": r.get("shortlisted", False),
                 "verdict": r.get("verdict", r.get("shortlist_verdict", "pending")),
-                "hr_decision": _interview_hr_decisions.get(sid, {}).get("decision", ""),
+                "hr_decision": r.get("hr_decision", "") or _interview_hr_decisions.get(sid, {}).get("decision", ""),
             }
             for sid, r in _interview_results.items()
         ],
