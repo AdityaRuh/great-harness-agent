@@ -390,7 +390,7 @@ async function renderAudit(){
 }
 
 // Actions
-async function acp(dec){var fb='';if(dec==='reject'){fb=prompt('Feedback:');if(!fb)return;}await api('/pipelines/'+SP+'/approve',{method:'POST',body:JSON.stringify({checkpoint:'jd_approval',decision:dec,feedback:dec==='reject'?fb:undefined})});render();}
+async async function acp(dec){var fb='';if(dec==='reject'){fb=prompt('Feedback:');if(!fb)return;}await api('/pipelines/'+SP+'/approve',{method:'POST',body:JSON.stringify({checkpoint:'jd_approval',decision:dec,feedback:dec==='reject'?fb:undefined})});try{await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:SP})});}catch(e){}switchTab('pipeline');}
 async function ul(f){if(!f.length)return;var fd2=new FormData();for(var i=0;i<f.length;i++)fd2.append('files',f[i]);await fetch(A+'/pipelines/'+SP+'/upload',{method:'POST',body:fd2});render();}
 async function appSL(){await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:SP||'all'})});alert('Shortlist approved!');renderInterviews();}
 var _ic={};function addIv(sid){_ic[sid]=(_ic[sid]||0)+1;var n=_ic[sid];document.getElementById('interviewers_'+sid).insertAdjacentHTML('beforeend','<div class="flex gap mb"><div style="flex:2"><input id="in_'+sid+'_'+n+'" placeholder="Name"></div><div style="flex:2"><input id="ie_'+sid+'_'+n+'" placeholder="Email"></div><div style="flex:1"><input id="ir_'+sid+'_'+n+'" placeholder="Role"></div></div>');}
