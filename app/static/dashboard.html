@@ -62,7 +62,7 @@ input,textarea,select{font-family:var(--font)}
 .tl-dot.live::after{content:'';position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:var(--ok);border:2px solid var(--bg)}
 .tl-line{width:2px;flex:1;border-radius:1px;min-height:8px}
 .tl-card{flex:1;border-radius:var(--r);padding:16px 20px;border:1px solid;transition:all .2s}
-.tl-card.active{border-width:2px}
+.tl-card.active{border-width:2px}.tl-card.active .shimmer-bar{height:3px;border-radius:2px;margin-top:10px;background:linear-gradient(90deg,transparent 30%,rgba(124,110,240,.15) 50%,transparent 70%);background-size:200% 100%;animation:shimmer 2s ease infinite}
 .tl-card.fut{opacity:.35}
 .tl-card h4{font-size:14px;font-weight:500;margin-bottom:6px}
 .tl-card p{font-size:12px;line-height:1.6;color:var(--t2)}
@@ -78,7 +78,7 @@ input,textarea,select{font-family:var(--font)}
 .crow .cbdg{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500}
 
 /* Cards */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;transition:all .2s}.card:hover{border-color:var(--border2)}
 
 /* Overview metrics */
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
@@ -127,7 +127,7 @@ textarea{resize:vertical}
 
 .flex{display:flex}.gap{gap:8px}.aic{align-items:center}.jcb{justify-content:space-between}.w100{width:100%}.mt{margin-top:12px}.mb{margin-bottom:12px}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.fi{animation:fi .25s ease}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.fi{animation:fi .35s ease both}
 
 /* Loading states */
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
@@ -136,6 +136,62 @@ textarea{resize:vertical}
 .btn-er.loading::after{border-color:rgba(239,68,68,.3);border-top-color:#ef4444}
 .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;animation:pulse 1s ease infinite;margin-right:6px}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+/* === ENHANCED UI === */
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;transition:all .2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-card .stat-icon{position:absolute;top:14px;right:16px;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.stat-card .stat-label{font-size:11px;color:var(--t3);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.stat-card .stat-val{font-size:28px;font-weight:700;font-family:var(--mono);margin-top:6px;letter-spacing:-1.5px;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* Pipeline card enhanced */
+.pipe-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.pipe-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.pipe-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:2px 0 0 2px}
+.pipe-card[data-stage="1"]::before{background:var(--a1)}
+.pipe-card[data-stage="2"]::before{background:var(--a2)}
+.pipe-card[data-stage="3"]::before{background:var(--a3)}
+.pipe-card[data-stage="4"]::before{background:var(--a4)}
+
+/* Progress track */
+.progress-track{display:flex;align-items:center;gap:0;margin-top:14px}
+.progress-step{display:flex;align-items:center}
+.progress-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid var(--border);color:var(--t3);background:var(--bg);transition:all .2s}
+.progress-dot.done{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.progress-dot.active{border-color:currentColor;background:currentColor}
+.progress-dot.active span{color:#fff}
+.progress-dot.a1{color:var(--a1)}.progress-dot.a2{color:var(--a2)}.progress-dot.a3{color:var(--a3)}.progress-dot.a4{color:var(--a4)}
+.progress-line{width:28px;height:2px;background:var(--border)}
+.progress-line.done{background:var(--ok)}
+
+/* Toast notifications */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column-reverse;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--r);font-size:13px;font-weight:500;font-family:var(--font);color:#fff;opacity:0;transform:translateX(40px);transition:all .3s ease;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(0)}
+.toast.ok{background:#16a34a}.toast.err{background:#dc2626}.toast.warn{background:#ca8a04}.toast.info{background:#378ADD}
+
+/* Shimmer for AI thinking */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.shimmer{background:linear-gradient(90deg,transparent 30%,rgba(124,110,240,.08) 50%,transparent 70%);background-size:200% 100%;animation:shimmer 2s ease infinite}
+
+/* Stagger entrance */
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.stagger{opacity:0;animation:slideUp .4s ease forwards}
+
+/* Empty state enhanced */
+.empty-hero{text-align:center;padding:60px 20px}
+.empty-hero .hero-icon{width:100px;height:100px;margin:0 auto 24px;border-radius:24px;background:linear-gradient(135deg,var(--a1bg),var(--a3bg));display:flex;align-items:center;justify-content:center;position:relative}
+.empty-hero .hero-icon::after{content:'';position:absolute;inset:-4px;border-radius:28px;border:2px dashed var(--a1b);animation:spin 20s linear infinite}
+.empty-hero h2{font-size:20px;font-weight:600;color:var(--t1);margin-bottom:8px}
+.empty-hero p{font-size:14px;color:var(--t3);max-width:400px;margin:0 auto;line-height:1.6}
+
+/* Agent chips for empty state */
+.agent-chips{display:flex;justify-content:center;gap:10px;margin:20px 0 28px}
+.agent-chip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid}
+
 </style>
 </head>
 <body>
@@ -164,6 +220,7 @@ textarea{resize:vertical}
 <div class="main" id="main"></div>
 
 <script>
+function toast(msg,type){type=type||'ok';var tc=document.getElementById('toastC');if(!tc){tc=document.createElement('div');tc.id='toastC';tc.className='toast-container';document.body.appendChild(tc);}var t=document.createElement('div');t.className='toast '+type;t.innerHTML=(type==='ok'?'✓ ':type==='err'?'✕ ':type==='warn'?'⚠ ':'ℹ ')+msg;tc.appendChild(t);setTimeout(function(){t.classList.add('show')},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},3500);}
 function btnLoad(btn,txt){if(!btn||btn.classList.contains('loading'))return;btn._ot=btn.innerHTML;btn.classList.add('loading');btn.disabled=true;if(txt)btn.innerHTML=txt;}
 function btnDone(btn){if(!btn)return;btn.classList.remove('loading');btn.disabled=false;if(btn._ot)btn.innerHTML=btn._ot;}
 
@@ -208,13 +265,42 @@ async function render(){
 
 async function renderOverview(m){
   await lp();
-  if(!P.length){m.innerHTML='<div class="page"><div class="empty"><div class="ei">◈</div><h3>No pipelines yet</h3><p>Create your first AI-powered hiring pipeline</p><button class="btn btn-p mt" style="font-size:14px;padding:10px 24px" onclick="openModal()">+ New pipeline</button></div></div>';return;}
+  if(!P.length){m.innerHTML='<div class="page"><div class="empty-hero"><div class="hero-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M24 4L6 14v20l18 10 18-10V14L24 4z" stroke="url(#hg)" stroke-width="2" fill="none"/><circle cx="24" cy="24" r="6" fill="url(#hg)" opacity=".3"/><circle cx="24" cy="24" r="3" fill="url(#hg)"/><line x1="24" y1="18" x2="24" y2="8" stroke="var(--a1)" stroke-width="1.5" opacity=".5"/><line x1="29" y1="21" x2="36" y2="16" stroke="var(--a2)" stroke-width="1.5" opacity=".5"/><line x1="29" y1="27" x2="36" y2="32" stroke="var(--a3)" stroke-width="1.5" opacity=".5"/><line x1="24" y1="30" x2="24" y2="40" stroke="var(--a4)" stroke-width="1.5" opacity=".5"/><defs><linearGradient id="hg" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#7C6EF0"/><stop offset="1" stop-color="#D85A30"/></linearGradient></defs></svg></div><h2>Your AI hiring team is ready</h2><p>4 specialized agents work together to analyze roles, screen candidates, conduct interviews, and schedule offers — fully automated.</p><div class="agent-chips"><span class="agent-chip" style="background:var(--a1bg);color:var(--a1t);border-color:var(--a1b)">A1 · JD Writer</span><span class="agent-chip" style="background:var(--a2bg);color:var(--a2t);border-color:var(--a2b)">A2 · Screener</span><span class="agent-chip" style="background:var(--a3bg);color:var(--a3t);border-color:var(--a3b)">A3 · Interviewer</span><span class="agent-chip" style="background:var(--a4bg);color:var(--a4t);border-color:var(--a4b)">A4 · Scheduler</span></div><button class="btn btn-p" style="font-size:14px;padding:12px 28px;border-radius:10px" onclick="openModal()">✦ Create your first pipeline</button></div></div>';return;}
   var h='<div class="page">';
-  P.forEach(function(p){
-    h+='<div class="card fi" style="cursor:pointer" onclick="go(\'pipeline\',\''+p.id+'\')">';
-    h+='<div class="flex jcb aic"><div><div style="font-size:16px;font-weight:600">'+((p.role_title||'')|| (p.config?.role_title||'Untitled'))+'</div>';
-    h+='<div style="font-size:12px;color:var(--t3);margin-top:4px">'+(p.id||'').slice(0,16)+'...</div></div>';
-    h+='<div class="flex aic gap">'+sb(p.status)+'<button class="btn btn-er" style="padding:4px 10px;font-size:11px;margin-left:8px" data-id="'+p.id+'" onclick="event.stopPropagation();delPipe(this.dataset.id)">✕ Delete</button></div></div></div>';
+  // Stats bar
+  var stats={pipelines:P.length,candidates:0,interviews:0,offers:0};
+  try{var sr=await tFetch('/api/v1/pipelines/stats');if(sr){stats.candidates=sr.candidates||0;stats.interviews=sr.interviews||0;stats.offers=sr.offers||0;}}catch(e){}
+  h+='<div class="stats-grid">';
+  h+='<div class="stat-card stagger" style="animation-delay:.05s"><div class="stat-icon" style="background:var(--a1bg);color:var(--a1)">◈</div><div class="stat-label">Active pipelines</div><div class="stat-val">'+stats.pipelines+'</div></div>';
+  h+='<div class="stat-card stagger" style="animation-delay:.1s"><div class="stat-icon" style="background:var(--a2bg);color:var(--a2)">◇</div><div class="stat-label">Candidates screened</div><div class="stat-val">'+stats.candidates+'</div></div>';
+  h+='<div class="stat-card stagger" style="animation-delay:.15s"><div class="stat-icon" style="background:var(--a3bg);color:var(--a3)">◆</div><div class="stat-label">Interviews done</div><div class="stat-val">'+stats.interviews+'</div></div>';
+  h+='<div class="stat-card stagger" style="animation-delay:.2s"><div class="stat-icon" style="background:var(--a4bg);color:var(--a4)">★</div><div class="stat-label">Offers sent</div><div class="stat-val">'+stats.offers+'</div></div>';
+  h+='</div>';
+  // Pipeline cards with progress
+  h+='<div style="font-size:13px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Pipelines</div>';
+  P.forEach(function(p,i){
+    var st=p.status||'';var stage=1;
+    if(['ranking_complete','ranking_approved','screening_complete'].indexOf(st)>=0)stage=2;
+    if(['invites_sent','questions_generated','interviews_in_progress','interviews_evaluated','shortlist_ready','shortlist_confirmation'].indexOf(st)>=0)stage=3;
+    if(['final_verdict','completed'].indexOf(st)>=0||st.indexOf('scheduled')>=0)stage=4;
+    var title=(p.role_title||p.config?.role_title||'Untitled');
+    var created=p.created_at?new Date(p.created_at).toLocaleDateString('en',{month:'short',day:'numeric'}):'';
+    h+='<div class="pipe-card stagger" data-stage="'+stage+'" style="animation-delay:'+(0.05+i*0.06)+'s" onclick="go(\'pipeline\',\''+p.id+'\')">';
+    h+='<div class="flex jcb aic"><div><div style="font-size:16px;font-weight:600">'+title+'</div>';
+    h+='<div style="font-size:12px;color:var(--t3);margin-top:3px">'+(created?'Created '+created+' · ':'')+sb(st)+'</div></div>';
+    h+='<button class="btn btn-er" style="padding:4px 10px;font-size:11px" data-id="'+p.id+'" onclick="event.stopPropagation();delPipe(this.dataset.id)">✕</button></div>';
+    // Progress dots
+    h+='<div class="progress-track">';
+    for(var s2=1;s2<=4;s2++){
+      var cls='progress-dot';
+      if(s2<stage)cls+=' done';
+      else if(s2===stage)cls+=' active a'+s2;
+      h+='<div class="progress-step">';
+      h+='<div class="'+cls+'"><span>A'+s2+'</span></div>';
+      if(s2<4)h+='<div class="progress-line'+(s2<stage?' done':'')+'"></div>';
+      h+='</div>';
+    }
+    h+='</div></div>';
   });
   h+='</div>';m.innerHTML=h;
 }
@@ -267,7 +353,7 @@ async function renderPipeline(m){
 
   // Agent 3 — Coral
   h+='<div class="tl-item fi"><div class="tl-left"><div class="tl-dot'+(a3ok&&!a4ok?' live':'')+'" style="background:var(--a3bg);color:var(--a3t)">A3</div><div class="tl-line" style="background:'+(a3ok?'var(--a3)':'var(--border)')+'"></div></div>';
-  h+='<div class="tl-card'+(a2ok?'':' fut')+''+(a3ok?' active':'')+'" style="background:'+(a3ok?'var(--bg2)':'var(--bg2)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews'+(a4ok?' completed':a3ok?' in progress':'')+'</h4>'+(a4ok?'<span class="bdg b-a3">Completed</span>':a3ok?'<span class="bdg b-a3">Active now</span>':'<span class="bdg" style="color:var(--t3);border-color:var(--border)">Pending</span>')+'</div>';
+  h+='<div class="tl-card'+(a2ok?'':' fut')+''+(a3ok?' active':'')+'" style="background:'+(a3ok?'var(--bg2)':'var(--bg2)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews'+(a4ok?' completed':a3ok?' in progress':'')+'</h4>'+(a4ok?'<span class="bdg b-a3">Completed</span>':a3ok?'<span class="bdg b-a3">Active now</span></div><div class="shimmer-bar"></div>':'<span class="bdg" style="color:var(--t3);border-color:var(--border)">Pending</span>')+'</div>';
   // Show candidate rows if interviews are active
   if(a3ok){
     // Use ivResults already fetched above
@@ -295,7 +381,7 @@ async function renderPipeline(m){
 
 async function createPipeline(){
   var r=document.getElementById('inp_r').value,e=document.getElementById('inp_e').value,d=document.getElementById('inp_d').value;
-  if(!r||!e){alert('Fill in role title and experience');return;}
+  if(!r||!e){toast('Fill in role title and experience','warn');return;}
   var b=document.getElementById('createBtn');b.disabled=true;b.textContent='Agent 1 analyzing...';
   var res=await api('/pipelines',{method:'POST',body:JSON.stringify({role_title:r,experience_level:e,department:d,candidate_type:CT})});
   b.disabled=false;b.textContent='✦ Start Pipeline';
@@ -397,11 +483,11 @@ async function renderAudit(){
 // Actions
 async function acp(dec,btn){var fb='';if(dec==='reject'){fb=prompt('Feedback:');if(!fb)return;}btnLoad(btn,'<span class="pulse-dot"></span>Processing...');try{await api('/pipelines/'+SP+'/approve',{method:'POST',body:JSON.stringify({checkpoint:'jd_approval',decision:dec,feedback:dec==='reject'?fb:undefined})});try{await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:SP})});}catch(e){}}finally{btnDone(btn);}switchTab('pipeline');}
 async function ul(f){if(!f.length)return;var fd2=new FormData();for(var i=0;i<f.length;i++)fd2.append('files',f[i]);await fetch(A+'/pipelines/'+SP+'/upload',{method:'POST',body:fd2});render();}
-async function delPipe(pid){if(!confirm('Delete this pipeline and all its data? This cannot be undone.'))return;try{await fetch('/api/v1/pipelines/'+pid,{method:'DELETE'});if(SP===pid){SP=null;V='overview';}render();}catch(e){alert('Delete failed');}}
-async function appSL(btn){btnLoad(btn,'<span class="pulse-dot"></span>Approving...');await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:SP||'all'})});btnDone(btn);alert('Shortlist approved!');renderInterviews();}
+async function delPipe(pid){if(!confirm('Delete this pipeline and all its data? This cannot be undone.'))return;try{await fetch('/api/v1/pipelines/'+pid,{method:'DELETE'});if(SP===pid){SP=null;V='overview';}render();}catch(e){toast('Delete failed','err');}}
+async function appSL(btn){btnLoad(btn,'<span class="pulse-dot"></span>Approving...');await fetch('/api/v1/interview/approve-shortlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline_id:SP||'all'})});btnDone(btn);toast('Shortlist approved!','ok');renderInterviews();}
 var _ic={};function addIv(sid){_ic[sid]=(_ic[sid]||0)+1;var n=_ic[sid];document.getElementById('interviewers_'+sid).insertAdjacentHTML('beforeend','<div class="flex gap mb"><div style="flex:2"><input id="in_'+sid+'_'+n+'" placeholder="Name"></div><div style="flex:2"><input id="ie_'+sid+'_'+n+'" placeholder="Email"></div><div style="flex:1"><input id="ir_'+sid+'_'+n+'" placeholder="Role"></div></div>');}
-async function schIv(sid,name,email,btn){btnLoad(btn,'<span class="pulse-dot"></span>Scheduling...');var dt=document.getElementById('dt_'+sid)?.value,tm=document.getElementById('tm_'+sid)?.value,dur=document.getElementById('dur_'+sid)?.value||60;var ivs=[];for(var i=0;i<=(_ic[sid]||0);i++){var n=document.getElementById('in_'+sid+'_'+i)?.value,e=document.getElementById('ie_'+sid+'_'+i)?.value,r=document.getElementById('ir_'+sid+'_'+i)?.value;if(n&&e)ivs.push({name:n,email:e,role:r||''});}if(!ivs.length){alert('Add interviewer');return;}var res=await(await fetch('/api/v1/schedule-interview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,candidate_name:name,candidate_email:email,interview_date:dt,interview_time:tm,duration_minutes:parseInt(dur),interviewers:ivs})})).json();if(res.status==='scheduled'){alert('Scheduled! Meet: '+(res.meet_link||'pending'));renderInterviews();}else alert(JSON.stringify(res));}
-async function fd(sid,name,email,dec,btn){if(!confirm(dec==='selected'?'Send OFFER?':'Send REJECTION?'))return;btnLoad(btn,dec==='selected'?'<span class="pulse-dot"></span>Sending offer...':'<span class="pulse-dot"></span>Sending...');var sal='',st='';if(dec==='selected'){sal=prompt('Salary:','');st=prompt('Start date:','');}await(await fetch('/api/v1/final-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid||name,decision:dec,salary:sal||'',start_date:st||''})})).json();btnDone(btn);alert(dec==='selected'?'Offer sent!':'Rejection sent.');renderInterviews();}
+async function schIv(sid,name,email,btn){btnLoad(btn,'<span class="pulse-dot"></span>Scheduling...');var dt=document.getElementById('dt_'+sid)?.value,tm=document.getElementById('tm_'+sid)?.value,dur=document.getElementById('dur_'+sid)?.value||60;var ivs=[];for(var i=0;i<=(_ic[sid]||0);i++){var n=document.getElementById('in_'+sid+'_'+i)?.value,e=document.getElementById('ie_'+sid+'_'+i)?.value,r=document.getElementById('ir_'+sid+'_'+i)?.value;if(n&&e)ivs.push({name:n,email:e,role:r||''});}if(!ivs.length){toast('Add at least one interviewer','warn');return;}var res=await(await fetch('/api/v1/schedule-interview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,candidate_name:name,candidate_email:email,interview_date:dt,interview_time:tm,duration_minutes:parseInt(dur),interviewers:ivs})})).json();if(res.status==='scheduled'){alert('Scheduled! Meet: '+(res.meet_link||'pending'));renderInterviews();}else alert(JSON.stringify(res));}
+async function fd(sid,name,email,dec,btn){if(!confirm(dec==='selected'?'Send OFFER?':'Send REJECTION?'))return;btnLoad(btn,dec==='selected'?'<span class="pulse-dot"></span>Sending offer...':'<span class="pulse-dot"></span>Sending...');var sal='',st='';if(dec==='selected'){sal=prompt('Salary:','');st=prompt('Start date:','');}await(await fetch('/api/v1/final-decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid||name,decision:dec,salary:sal||'',start_date:st||''})})).json();btnDone(btn);toast(dec==='selected'?'Offer sent successfully!':'Rejection email sent.','ok');renderInterviews();}
 
 lp().then(function(){render()});
 </script>

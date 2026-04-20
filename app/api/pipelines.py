@@ -296,6 +296,43 @@ async def approve_checkpoint(pipeline_id: str, req: CheckpointApproval):
     }
 
 
+@router.get("/stats")
+async def pipeline_stats():
+    """Aggregate stats for the dashboard overview."""
+    total_pipelines = len(_pipelines)
+    total_candidates = 0
+    total_interviews = 0
+    total_offers = 0
+    
+    graph = get_graph()
+    for pid, pdata in _pipelines.items():
+        try:
+            config = {"configurable": {"thread_id": pid}}
+            state = await graph.aget_state(config)
+            if state and state.values:
+                s = state.values
+                total_candidates += len(s.get("candidates", []))
+                total_interviews += len(s.get("scheduled_interviews", []))
+                total_offers += len(s.get("offers_sent", []))
+        except Exception:
+            pass
+    
+    # Also count from interview results
+    try:
+        from app.storage import _mem_interview_results, _mem_scheduled
+        total_interviews = max(total_interviews, len(_mem_interview_results))
+        total_offers = max(total_offers, len(_mem_scheduled))
+    except Exception:
+        pass
+    
+    return {
+        "pipelines": total_pipelines,
+        "candidates": total_candidates,
+        "interviews": total_interviews,
+        "offers": total_offers,
+    }
+
+
 @router.get("")
 async def list_pipelines():
     """List all pipelines."""
