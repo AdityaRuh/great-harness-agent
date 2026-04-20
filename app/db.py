@@ -167,21 +167,13 @@ async def init_db():
 
     _sync_engine = create_engine(sync_url, pool_size=3, max_overflow=5, pool_timeout=10)
 
-    # Create/update tables (drop first to fix schema mismatches during development)
+    # Create tables if they don't exist (idempotent — safe on every startup)
     try:
         async with _async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
-        logger.info("Database tables recreated successfully")
+        logger.info("Database tables verified/created")
     except Exception as e:
         logger.warning(f"Table creation issue: {e}")
-        # Try create without drop
-        try:
-            async with _async_engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            logger.info("Database tables created (fallback)")
-        except Exception as e2:
-            logger.warning(f"Table fallback also failed: {e2}")
 
 
 async def close_db():
