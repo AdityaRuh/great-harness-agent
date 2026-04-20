@@ -197,6 +197,7 @@ function renderNav(){
 
 async function render(){
   renderNav();var m=document.getElementById('main');
+  if(V!=='overview')m.innerHTML='<div class="page" style="display:flex;align-items:center;justify-content:center;min-height:300px"><div style="text-align:center"><div class="pulse-dot" style="width:12px;height:12px;margin:0 auto 12px"></div><div style="color:var(--t3);font-size:13px">Loading...</div></div></div>';
   if(V==='overview')await renderOverview(m);
   else if(V==='pipeline'&&SP)await renderPipeline(m);
   else if(V==='candidates'&&SP)await renderCandidatesTab();
