@@ -184,7 +184,7 @@ function renderNav(){
   if(SP){
     // Inside a pipeline — show pipeline tabs
     tabs='<div class="tab'+(V==='pipeline'?' on':'')+'" data-t="pipeline">Timeline</div><div class="tab'+(V==='candidates'?' on':'')+'" data-t="candidates">Candidates</div><div class="tab'+(V==='interviews'?' on':'')+'" data-t="interviews">Interviews</div><div class="tab'+(V==='audit'?' on':'')+'" data-t="audit">Audit</div>';
-    right='<button class="btn" onclick="go(\'overview\')" style="font-size:12px;margin-right:8px">← Back</button><button class="btn btn-er" style="padding:6px 14px;font-size:12px;margin-left:8px" onclick="delPipe(SP)">✕ Delete pipeline</button><button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
+    right='<button class="btn" onclick="go(\'overview\')" style="font-size:12px;margin-right:8px">← Back</button><button class="btn btn-p" onclick="openModal()" style="font-size:12px">+ New pipeline</button>';
   } else {
     // Overview — no tabs, just the button
     tabs='';
