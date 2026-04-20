@@ -228,7 +228,7 @@ async function renderPipeline(m){
   var a2ok=!!d.jd_published_url||['ranking_complete','ranking_approved','shortlist_ready','invites_sent','questions_generated','interviews_in_progress','interviews_evaluated','shortlist_confirmation','completed'].indexOf(s)>=0;
   var a3ok=['invites_sent','questions_generated','interviews_in_progress','interviews_evaluated','shortlist_ready','shortlist_confirmation','completed'].indexOf(s)>=0;
   var ivResults=[],schd=[],a4ok=false,pending=[];
-  try{var tlAll=await Promise.allSettled([tFetch('/api/v1/interview/results'),tFetch('/api/v1/scheduled-interviews'),tFetch('/api/v1/interview/pending')]);
+  try{var tlAll=await Promise.allSettled([tFetch('/api/v1/interview/results?pipeline_id='+SP),tFetch('/api/v1/scheduled-interviews?pipeline_id='+SP),tFetch('/api/v1/interview/pending?pipeline_id='+SP)]);
     if(tlAll[0].status==='fulfilled')ivResults=tlAll[0].value.results||[];
     if(tlAll[1].status==='fulfilled')schd=tlAll[1].value.interviews||[];
     if(tlAll[2].status==='fulfilled')pending=tlAll[2].value.pending||[];
@@ -351,7 +351,7 @@ async function renderInterviews(){
   m.innerHTML='<div class="page"><div style="text-align:center;padding:40px;color:var(--t3)">Loading interviews...</div></div>';
   var results=[],scheduled=[],approved=false;
   try{
-    var all=await Promise.allSettled([tFetch('/api/v1/interview/results'),tFetch('/api/v1/scheduled-interviews'),tFetch('/api/v1/interview/shortlist-status'),tFetch('/api/v1/interview/pending')]);
+    var pf=SP?'?pipeline_id='+SP:'';var all=await Promise.allSettled([tFetch('/api/v1/interview/results'+pf),tFetch('/api/v1/scheduled-interviews'+pf),tFetch('/api/v1/interview/shortlist-status'),tFetch('/api/v1/interview/pending'+pf)]);
     if(all[0].status==='fulfilled')results=all[0].value.results||[];
     if(all[1].status==='fulfilled')scheduled=all[1].value.interviews||[];
     if(all[2].status==='fulfilled')approved=(all[2].value.approved_pipelines||[]).length>0;

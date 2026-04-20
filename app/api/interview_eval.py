@@ -1,7 +1,7 @@
 """Interview evaluation — receives transcript, scores with Claude, sends notifications."""
 
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from app.integrations.llm import call_llm_json
 from app.integrations.email import send_email
@@ -54,7 +54,7 @@ async def get_interview_questions(session_id: str):
 
 
 @router.get("/api/v1/interview/pending")
-async def get_pending_interviews():
+async def get_pending_interviews(request: Request = None):
     """Get interviews that are pending (invite sent but not completed)."""
     pending = []
     # Always sync pending from DB (workers have separate memory)
@@ -77,6 +77,9 @@ async def get_pending_interviews():
                 "status": "invite_sent",
                 "questions_count": len(_interview_questions.get(sid, [])),
             })
+    pipeline_filter = request.query_params.get("pipeline_id") if request else None
+    if pipeline_filter:
+        pending = [p for p in pending if _interview_question_meta.get(p.get("session_id", ""), {}).get("pipeline_id", "") == pipeline_filter or not _interview_question_meta.get(p.get("session_id", ""), {}).get("pipeline_id")]
     return {"pending": pending, "total": len(pending)}
 
 @router.post("/api/v1/interview/evaluate")
@@ -201,9 +204,10 @@ If the candidate gave very short or empty answers, score accordingly."""
     evaluation["shortlist_verdict"] = shortlist_verdict
     evaluation["composite_formula"] = "80% screening + 20% interview"
 
-    # Update result with resolved name/email from meta
+    # Update result with resolved name/email/pipeline from meta
     _interview_results[data.session_id]["candidate_name"] = data.candidate_name
     _interview_results[data.session_id]["candidate_email"] = data.candidate_email
+    _interview_results[data.session_id]["pipeline_id"] = meta.get("pipeline_id", "")
     _interview_results[data.session_id]["composite_score"] = composite_score
     _interview_results[data.session_id]["screening_score"] = screening_score
     _interview_results[data.session_id]["shortlisted"] = shortlisted
@@ -268,7 +272,11 @@ async def get_interview_result(session_id: str):
 
 
 @router.get("/api/v1/interview/results")
-async def list_interview_results():
+async def list_interview_results(request: Request = None):
+    # Get pipeline_id filter from query param
+    pipeline_filter = None
+    if request:
+        pipeline_filter = request.query_params.get("pipeline_id")
     # Always sync from DB (workers have separate memory)
     try:
         from app.storage import list_interview_results as storage_list
@@ -283,7 +291,7 @@ async def list_interview_results():
     except Exception:
         pass
     """List all interview results."""
-    return {
+    out = {
         "total": len(_interview_results),
         "results": [
             {
@@ -296,10 +304,16 @@ async def list_interview_results():
                 "shortlisted": r.get("shortlisted", False),
                 "verdict": r.get("verdict", r.get("shortlist_verdict", "pending")),
                 "hr_decision": r.get("hr_decision", "") or _interview_hr_decisions.get(sid, {}).get("decision", ""),
+                "pipeline_id": r.get("pipeline_id", ""),
             }
             for sid, r in _interview_results.items()
         ],
     }
+    # Apply pipeline filter if provided
+    if pipeline_filter:
+        out["results"] = [r for r in out["results"] if r.get("pipeline_id", "") == pipeline_filter or not r.get("pipeline_id")]
+        out["total"] = len(out["results"])
+    return out
 
 
 @router.post("/api/v1/interview/hr-decision")

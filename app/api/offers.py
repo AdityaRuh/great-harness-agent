@@ -146,9 +146,17 @@ async def schedule_final_interview(data: ScheduleRequest):
         logger.info(f"Briefing sent to interviewer: {interviewer['name']} ({interviewer['email']})")
 
     # Store schedule
+    # Get pipeline_id from interview result meta
+    _pid = ""
+    try:
+        from app.api.interview_eval import _interview_question_meta
+        _pid = _interview_question_meta.get(data.session_id, {}).get("pipeline_id", "")
+    except Exception:
+        pass
     sched_data = {
         "candidate_name": data.candidate_name,
         "candidate_email": data.candidate_email,
+        "pipeline_id": _pid,
         "date": data.interview_date,
         "time": data.interview_time,
         "meet_link": meet_link,
@@ -313,7 +321,8 @@ async def final_decision(data: FinalDecision):
 
 
 @router.get("/api/v1/scheduled-interviews")
-async def list_scheduled():
+async def list_scheduled(request: Request = None):
+    pipeline_filter = request.query_params.get("pipeline_id") if request else None
     # Always sync from DB (workers have separate memory)
     try:
         from app.storage import list_scheduled_interviews as storage_sched
@@ -327,7 +336,9 @@ async def list_scheduled():
     interviews = []
     for sid, data in _scheduled.items():
         interviews.append({**data, "session_id": sid})
-    return {"total": len(_scheduled), "interviews": interviews}
+    if pipeline_filter:
+        interviews = [i for i in interviews if i.get("pipeline_id", "") == pipeline_filter or not i.get("pipeline_id")]
+    return {"total": len(interviews), "interviews": interviews}
 
 
 @router.get("/api/v1/final-decisions")

@@ -52,12 +52,12 @@ def send_interview_invites(
                     from app.storage import save_interview_questions as _save_q
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
-                        asyncio.ensure_future(_save_q(session_id, q_list, {"name": name, "email": email, "screening_score": screening.get("total_score", 0)}))
+                        asyncio.ensure_future(_save_q(session_id, q_list, {"name": name, "email": email, "screening_score": screening.get("total_score", 0), "pipeline_id": pipeline_id}))
                 except Exception:
                     pass
                 from app.api.interview_eval import _interview_question_meta
                 screening_score = candidate.get("screening_result", {}).get("total_score", 0)
-                _interview_question_meta[session_id] = {"name": name, "email": email, "screening_score": screening_score}
+                _interview_question_meta[session_id] = {"name": name, "email": email, "screening_score": screening_score, "pipeline_id": pipeline_id}
                 logger.info(f"Generated {len(q_list)} tailored questions for {name} (session {session_id[:8]})")
         except Exception as qe:
             logger.warning(f"Question generation failed for {name}: {qe}")
