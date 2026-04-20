@@ -128,6 +128,31 @@ async def create_pipeline(req: PipelineCreate):
     )
 
 
+@router.delete("/{pipeline_id}")
+async def delete_pipeline(pipeline_id: str):
+    """Delete a pipeline and all associated data."""
+    # Remove from memory
+    _pipelines.pop(pipeline_id, None)
+    _running_pipelines.discard(pipeline_id)
+
+    # Remove from DB
+    try:
+        from app.db import delete_pipeline_db
+        await delete_pipeline_db(pipeline_id)
+    except Exception as e:
+        logger.warning(f"DB delete failed: {e}")
+
+    # Remove associated interview data
+    try:
+        from app.storage import delete_pipeline_data
+        await delete_pipeline_data(pipeline_id)
+    except Exception:
+        pass
+
+    logger.info(f"Pipeline {pipeline_id} deleted")
+    return {"status": "deleted", "id": pipeline_id}
+
+
 @router.get("/{pipeline_id}", response_model=PipelineResponse)
 async def get_pipeline(pipeline_id: str):
     """Get current state of a pipeline."""

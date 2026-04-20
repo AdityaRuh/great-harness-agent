@@ -476,3 +476,49 @@ async def save_hr_decision_db(pipeline_id: str, candidate_key: str, decision: st
                 candidate_key=candidate_key, decision=decision, note=note,
             ))
         await session.commit()
+
+
+async def delete_pipeline_db(pipeline_id: str):
+    """Delete a pipeline and all associated data from DB."""
+    async with get_session() as session:
+        # Delete pipeline
+        p = await session.get(Pipeline, pipeline_id)
+        if p:
+            await session.delete(p)
+
+        # Delete associated interview questions
+        result = await session.execute(
+            select(InterviewQuestion).where(InterviewQuestion.pipeline_id == pipeline_id)
+        )
+        for r in result.scalars().all():
+            await session.delete(r)
+
+        # Delete associated interview results
+        result = await session.execute(
+            select(InterviewResult).where(InterviewResult.pipeline_id == pipeline_id)
+        )
+        for r in result.scalars().all():
+            await session.delete(r)
+
+        # Delete HR decisions
+        result = await session.execute(
+            select(HRDecision).where(HRDecision.pipeline_id == pipeline_id)
+        )
+        for r in result.scalars().all():
+            await session.delete(r)
+
+        # Delete shortlist approval
+        result = await session.execute(
+            select(InterviewShortlistApproval).where(InterviewShortlistApproval.pipeline_id == pipeline_id)
+        )
+        for r in result.scalars().all():
+            await session.delete(r)
+
+        # Delete scheduled interviews for this pipeline
+        result = await session.execute(
+            select(ScheduledInterview).where(ScheduledInterview.pipeline_id == pipeline_id)
+        )
+        for r in result.scalars().all():
+            await session.delete(r)
+
+        await session.commit()

@@ -381,3 +381,22 @@ async def list_interview_hr_decisions() -> list[dict]:
         except Exception:
             pass
     return [{"session_id": k, **v} for k, v in _mem_interview_hr_decisions.items()]
+
+
+async def delete_pipeline_data(pipeline_id: str):
+    """Remove all pipeline-associated data from memory."""
+    _mem_pipelines.pop(pipeline_id, None)
+    _mem_shortlist_approved.discard(pipeline_id)
+    _mem_hr_decisions.pop(pipeline_id, None)
+
+    # Remove interview data linked to this pipeline
+    to_remove = []
+    for sid, meta in _mem_interview_question_meta.items():
+        if meta.get("pipeline_id") == pipeline_id:
+            to_remove.append(sid)
+    for sid in to_remove:
+        _mem_interview_question_meta.pop(sid, None)
+        _mem_interview_questions.pop(sid, None)
+        _mem_interview_results.pop(sid, None)
+        _mem_interview_hr_decisions.pop(sid, None)
+        _mem_scheduled.pop(sid, None)
