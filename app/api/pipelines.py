@@ -351,29 +351,12 @@ async def list_pipelines():
         pass
 
     items = []
-    graph = get_graph()
     for pid, pdata in _pipelines.items():
-        if pid in _running_pipelines:
-            # Don't call graph.get_state while graph is running — use cached status
-            items.append({
-                "id": pid,
-                "role_title": pdata["config"]["role_title"],
-                "status": pdata.get("last_status", "processing"),
-                "config": pdata.get("config", {}),
-                "created_at": pdata.get("created_at", ""),
-            })
-            continue
-        config = {"configurable": {"thread_id": pid}}
-        try:
-            state = await graph.aget_state(config)
-            status = state.values.get("status", "unknown") if state and state.values else "unknown"
-            pdata["last_status"] = status  # cache it
-        except Exception:
-            status = pdata.get("last_status", "unknown")
+        # Use cached status for fast list response — detail view has fresh state
         items.append({
             "id": pid,
-            "role_title": pdata["config"]["role_title"],
-            "status": status,
+            "role_title": pdata.get("config", {}).get("role_title", "Untitled"),
+            "status": pdata.get("last_status", "unknown"),
             "config": pdata.get("config", {}),
             "created_at": pdata.get("created_at", ""),
         })
