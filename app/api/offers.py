@@ -6,7 +6,7 @@ Post-Interview: HR marks selected → congrats/rejection emails
 """
 
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from app.integrations.llm import call_llm
 from app.integrations.email import send_email
