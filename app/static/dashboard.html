@@ -234,12 +234,7 @@ async function renderPipeline(m){
     if(tlAll[2].status==='fulfilled')pending=tlAll[2].value.pending||[];
   }catch(e){}
   a4ok=schd.length>0;if(a4ok||ivResults.length)a3ok=true;
-  // Check actual interview/scheduling state
-  var ivResults=[];try{ivResults=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
-  var schd=[];try{schd=(await(await fetch('/api/v1/scheduled-interviews')).json()).interviews||[];}catch(e){}
-  var a4ok=schd.length>0;
-  if(a4ok)a3ok=true;
-  if(ivResults.length>0)a3ok=true;
+  // ivResults, schd, pending, a4ok already set above from batch fetch
 
   // Get candidates for pills
   var cands=[];try{var cr=await api('/pipelines/'+SP+'/candidates');cands=cr?.candidates||[];}catch(e){}
@@ -274,7 +269,7 @@ async function renderPipeline(m){
   h+='<div class="tl-card'+(a2ok?'':' fut')+''+(a3ok?' active':'')+'" style="background:'+(a3ok?'var(--bg2)':'var(--bg2)')+';border-color:'+(a3ok?'var(--a3)':'var(--border)')+'"><div class="flex jcb aic"><h4 style="color:'+(a3ok?'var(--a3t)':'var(--t3)')+'">AI interviews'+(a4ok?' completed':a3ok?' in progress':'')+'</h4>'+(a4ok?'<span class="bdg b-a3">Completed</span>':a3ok?'<span class="bdg b-a3">Active now</span>':'<span class="bdg" style="color:var(--t3);border-color:var(--border)">Pending</span>')+'</div>';
   // Show candidate rows if interviews are active
   if(a3ok){
-    var results=[];try{results=(await(await fetch('/api/v1/interview/results')).json()).results||[];}catch(e){}
+    // Use ivResults already fetched above
     if(pending.length&&!ivResults.length){
     h+='<div style="font-size:14px;font-weight:500;color:var(--a3t);margin-bottom:12px">Pending AI interviews</div>';
     pending.forEach(function(p){
