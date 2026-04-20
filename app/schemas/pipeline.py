@@ -11,6 +11,7 @@ class PipelineCreate(BaseModel):
     experience_level: str = Field(..., examples=["2 years"])
     department: str = Field(default="Engineering")
     candidate_type: str = Field(default="auto", description="fresher | experienced | auto")
+    interview_rounds: int = Field(default=1, description="Number of human interview rounds (1-3)")
 
 
 class PipelineResponse(BaseModel):

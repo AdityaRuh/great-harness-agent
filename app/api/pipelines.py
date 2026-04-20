@@ -50,6 +50,7 @@ async def create_pipeline(req: PipelineCreate):
         "role_title": req.role_title,
         "experience_level": req.experience_level,
         "candidate_type": req.candidate_type,
+            "interview_rounds": req.interview_rounds,
         "department": req.department,
         "status": "started",
         "current_checkpoint": None,
@@ -83,6 +84,7 @@ async def create_pipeline(req: PipelineCreate):
         "experience_level": req.experience_level,
         "department": req.department,
         "candidate_type": req.candidate_type,
+            "interview_rounds": req.interview_rounds,
     }
     _pipelines[pipeline_id] = {
         "id": pipeline_id,

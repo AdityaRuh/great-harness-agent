@@ -28,6 +28,7 @@ class ScheduleRequest(BaseModel):
     interview_date: str  # "2026-04-20"
     interview_time: str  # "15:00" (24h) or "3:00 PM"
     duration_minutes: int = 60
+    round_number: int = 1
     interviewers: list[dict]  # [{"name": "Vaibhav", "email": "vaibhav@ruh.ai", "role": "CTO"}]
     notes: str = ""
 
@@ -162,6 +163,7 @@ async def schedule_final_interview(data: ScheduleRequest):
         "meet_link": meet_link,
         "interviewers": data.interviewers,
         "status": "scheduled",
+        "round_number": data.round_number,
     }
     _scheduled[data.session_id] = sched_data
     # Persist to DB for cross-worker
@@ -335,7 +337,7 @@ async def list_scheduled(request: Request = None):
         pass
     interviews = []
     for sid, data in _scheduled.items():
-        interviews.append({**data, "session_id": sid})
+        interviews.append({**data, "session_id": sid, "round_number": data.get("round_number", 1)})
     if pipeline_filter:
         interviews = [i for i in interviews if i.get("pipeline_id", "") == pipeline_filter or not i.get("pipeline_id")]
     return {"total": len(interviews), "interviews": interviews}
