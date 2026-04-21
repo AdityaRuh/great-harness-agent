@@ -293,8 +293,7 @@ async function renderOverview(m){
   h+='<div style="font-size:13px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Pipelines</div>';
   P.forEach(function(p,i){
     var st=p.status||'';var stage=1;var rounds2=p.config?.interview_rounds||1;
-    if(['jd_pending_approval','jd_approved','jd_published'].indexOf(st)>=0)stage=2;
-    if(['ranking_complete','ranking_approved','screening_complete'].indexOf(st)>=0)stage=2;
+    if(['jd_approved','jd_published','ranking_complete','ranking_approved','screening_complete'].indexOf(st)>=0)stage=2;
     if(['invites_sent','questions_generated','interviews_in_progress','interviews_evaluated','shortlist_ready','shortlist_confirmation'].indexOf(st)>=0)stage=3;
     if(['final_verdict','completed'].indexOf(st)>=0||st.indexOf('scheduled')>=0)stage=4;
     if(st==='completed')stage=3+rounds2+1;
