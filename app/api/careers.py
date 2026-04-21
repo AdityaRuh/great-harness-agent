@@ -66,9 +66,14 @@ async def careers_detail(pipeline_id: str):
     return HTMLResponse(_page(role, f'''
 <article class="jd">
 <div class="jd-header"><div class="badge">{dept} · {exp}</div><h1>{role}</h1>
-<button class="apply-btn" onclick="document.getElementById('apply-modal').style.display='flex'">Apply Now</button></div>
+<p class="company">at <strong>Ruh AI</strong></p>
+<button class="apply-btn" onclick="document.getElementById('apply-modal').style.display='flex'">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+Apply Now</button></div>
 <div class="jd-body">{jd_html}</div>
-<div class="jd-footer"><button class="apply-btn" onclick="document.getElementById('apply-modal').style.display='flex'">Apply for this Role</button>
+<div class="jd-footer"><button class="apply-btn" onclick="document.getElementById('apply-modal').style.display='flex'">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+Apply for this Role</button>
 <a href="/careers" class="back-link">← View All Positions</a></div>
 </article>
 
