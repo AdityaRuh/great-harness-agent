@@ -47,9 +47,19 @@ async def get_interview_questions(session_id: str):
             pass
     # Also return candidate info if available
     meta = _interview_question_meta.get(session_id, {})
+    # Get role title from pipeline config
+    role_title = ""
+    pid = meta.get("pipeline_id", "")
+    if pid:
+        try:
+            from app.storage import _mem_pipelines
+            pdata = _mem_pipelines.get(pid, {})
+            role_title = pdata.get("config", {}).get("role_title", "")
+        except Exception:
+            pass
     return {"session_id": session_id, "questions": questions, "total": len(questions),
             "candidate_name": meta.get("name", ""), "candidate_email": meta.get("email", ""),
-            "screening_score": meta.get("screening_score", 0)}
+            "screening_score": meta.get("screening_score", 0), "role_title": role_title}
 
 
 

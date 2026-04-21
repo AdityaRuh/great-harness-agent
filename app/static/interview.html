@@ -223,10 +223,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);height:100vh;o
   }
 
   var qi=0,active=false,questionsLoaded=false;
-  var candidateName="Candidate",candidateEmail="";
+  var candidateName="Candidate",candidateEmail="",roleTitle="this position";
   fetch("/api/v1/interview/questions/__SESSION_ID__").then(function(r){return r.json()}).then(function(data){
     if(data.candidate_name)candidateName=data.candidate_name;
     if(data.candidate_email)candidateEmail=data.candidate_email;
+    if(data.role_title)roleTitle=data.role_title;
     if(data.questions&&data.questions.length>0){
       qs=data.questions.map(function(q){return typeof q==="string"?q:(q.text||q.question||"")}).filter(function(q){return q.length>0});
       if(qs.length>0){questionsLoaded=true;console.log("Loaded "+qs.length+" tailored questions for "+candidateName)}
@@ -272,7 +273,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);height:100vh;o
   document.getElementById("startBtn").addEventListener("click",function(){
     this.disabled=true;document.getElementById("endBtn").disabled=false;
     active=true;startTimer();
-    avatarSpeak("Welcome! I am Zara, your AI interviewer for the Full Stack Developer role at Ruh AI. I will ask you a series of technical and behavioral questions. Please take your time and speak clearly into your microphone. Let us begin!",function(){
+    avatarSpeak("Welcome! I am Zara, your AI interviewer for the "+roleTitle+" role at Ruh AI. I will ask you a series of technical and behavioral questions. Please take your time and speak clearly into your microphone. Let us begin!",function(){
       setTimeout(runQuestion,1000);
     });
   });
@@ -305,7 +306,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);height:100vh;o
     var bar=document.getElementById("statusBar");
     bar.className="status-bar ai-speaking";bar.textContent="Evaluating your interview...";
     document.getElementById("liveText").textContent="Sending "+transcript.length+" responses for evaluation...";
-    var body={session_id:"__SESSION_ID__",candidate_name:candidateName,candidate_email:candidateEmail,role_title:"Full Stack Developer",transcript:transcript};
+    var body={session_id:"__SESSION_ID__",candidate_name:candidateName,candidate_email:candidateEmail,role_title:roleTitle,transcript:transcript};
     fetch("/api/v1/interview/evaluate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(data){
       bar.className="status-bar";bar.textContent="";
       if(data.interview_score!==undefined){
