@@ -466,7 +466,7 @@ async function renderInterviews(){
     var pf=SP?'?pipeline_id='+SP:'';var all=await Promise.allSettled([tFetch('/api/v1/interview/results'+pf),tFetch('/api/v1/scheduled-interviews'+pf),tFetch('/api/v1/interview/shortlist-status'),tFetch('/api/v1/interview/pending'+pf)]);
     if(all[0].status==='fulfilled')results=all[0].value.results||[];
     if(all[1].status==='fulfilled')scheduled=all[1].value.interviews||[];
-    if(all[2].status==='fulfilled')approved=(all[2].value.approved_pipelines||[]).length>0;
+    if(all[2].status==='fulfilled')approved=(all[2].value.approved_pipelines||[]).indexOf(SP)>=0;
     var pending=[];if(all[3]&&all[3].status==='fulfilled')pending=all[3].value.pending||[];
   }catch(e){}
   var h='<div class="page"><div style="font-size:18px;font-weight:600;margin-bottom:4px">Interviews & scheduling</div><p style="font-size:13px;color:var(--t3);margin-bottom:20px">80% screening + 20% interview = composite score</p>';
