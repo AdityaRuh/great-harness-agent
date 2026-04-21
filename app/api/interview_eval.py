@@ -89,7 +89,7 @@ async def get_pending_interviews(request: Request = None):
             })
     pipeline_filter = request.query_params.get("pipeline_id") if request else None
     if pipeline_filter:
-        pending = [p for p in pending if _interview_question_meta.get(p.get("session_id", ""), {}).get("pipeline_id", "") == pipeline_filter or not _interview_question_meta.get(p.get("session_id", ""), {}).get("pipeline_id")]
+        pending = [p for p in pending if _interview_question_meta.get(p.get("session_id", ""), {}).get("pipeline_id", "") == pipeline_filter]
     return {"pending": pending, "total": len(pending)}
 
 @router.post("/api/v1/interview/evaluate")
@@ -321,7 +321,7 @@ async def list_interview_results(request: Request = None):
     }
     # Apply pipeline filter if provided
     if pipeline_filter:
-        out["results"] = [r for r in out["results"] if r.get("pipeline_id", "") == pipeline_filter or not r.get("pipeline_id")]
+        out["results"] = [r for r in out["results"] if r.get("pipeline_id", "") == pipeline_filter]
         out["total"] = len(out["results"])
     return out
 

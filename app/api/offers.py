@@ -29,6 +29,7 @@ class ScheduleRequest(BaseModel):
     interview_time: str  # "15:00" (24h) or "3:00 PM"
     duration_minutes: int = 60
     round_number: int = 1
+    pipeline_id: str = ""
     interviewers: list[dict]  # [{"name": "Vaibhav", "email": "vaibhav@ruh.ai", "role": "CTO"}]
     notes: str = ""
 
@@ -151,7 +152,7 @@ async def schedule_final_interview(data: ScheduleRequest):
     _pid = ""
     try:
         from app.api.interview_eval import _interview_question_meta
-        _pid = _interview_question_meta.get(data.session_id, {}).get("pipeline_id", "")
+        _pid = data.pipeline_id or _interview_question_meta.get(data.session_id, {}).get("pipeline_id", "")
     except Exception:
         pass
     sched_data = {
@@ -339,7 +340,7 @@ async def list_scheduled(request: Request = None):
     for sid, data in _scheduled.items():
         interviews.append({**data, "session_id": sid, "round_number": data.get("round_number", 1)})
     if pipeline_filter:
-        interviews = [i for i in interviews if i.get("pipeline_id", "") == pipeline_filter or not i.get("pipeline_id")]
+        interviews = [i for i in interviews if i.get("pipeline_id", "") == pipeline_filter]
     return {"total": len(interviews), "interviews": interviews}
 
 
