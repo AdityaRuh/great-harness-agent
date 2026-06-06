@@ -30,7 +30,8 @@ STATIC_DIR = Path(__file__).parent / "static"
 async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name} v1.0")
     logger.info(f"Knowledgebase: {settings.knowledgebase_path}")
-    logger.info(f"LLM fast: {settings.llm_model_fast} | strong: {settings.llm_model_strong}")
+    strong = settings.openai_codex_model_strong or settings.openai_codex_model
+    logger.info(f"LLM (OpenAI Codex): {settings.openai_codex_model} | strong: {strong}")
     logger.info(f"Clawvatar: {settings.clawvatar_url}")
     logger.info(f"HR email: {settings.hr_email or '(not set)'}")
 

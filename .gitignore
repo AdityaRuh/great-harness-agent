@@ -3,6 +3,9 @@ __pycache__/
 .venv/
 .env
 credentials.json
+credentials-service-account.json
+token.json
+.DS_Store
 *.egg-info/
 dist/
 build/

@@ -11,10 +11,18 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://user:pass@localhost:5432/harness"
     database_url_sync: str = "postgresql://user:pass@localhost:5432/harness"
-    anthropic_auth_token: str = ""
-    anthropic_api_key: str = ""
-    llm_model_fast: str = "claude-sonnet-4-20250514"
-    llm_model_strong: str = "claude-opus-4-20250514"
+
+    # OpenAI Codex (ChatGPT OAuth) — sole LLM provider for chat + code agents
+    openai_codex_client_id: str = "app_EMoamEEZ73f0CkXaXp7hrann"
+    openai_codex_account_id: str = ""
+    openai_codex_access_token: str = ""
+    openai_codex_refresh_token: str = ""
+    openai_codex_expires_ms: int = 0
+    openai_codex_model: str = "gpt-5.5"
+    openai_codex_model_strong: str = ""  # blank → falls back to openai_codex_model
+    openai_codex_thinking: str = "medium"
+    openai_codex_instructions: str = ""  # blank → llm.py default applies
+
     google_credentials_path: str = "credentials.json"
     hr_email: str = ""
     clawvatar_url: str = "ws://localhost:8765"
